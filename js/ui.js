@@ -27,7 +27,8 @@ themeToggleBtn.addEventListener('click', () => {
 
 function updateThemeIcon() {
   const isDark = document.body.classList.contains('dark');
-  themeToggleBtn.textContent = isDark ? '☀️' : '🌓';
+  const themeIcon = document.getElementById('themeIcon');
+  themeIcon.textContent = isDark ? '☀' : '☽';
 }
 
 // ======= Toast 提示 =======
