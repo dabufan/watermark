@@ -34,8 +34,8 @@ body.dark {
 
 /* 页头 */
 .header {
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
   padding: 16px 0;
   position: sticky;
   top: 0;
@@ -44,8 +44,8 @@ body.dark {
 }
 
 body.dark .header {
-  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
-  border-bottom-color: #334155;
+  background: rgba(55, 65, 81, 0.8);
+  border-bottom-color: rgba(51, 65, 85, 0.5);
 }
 
 .header-content {
@@ -1050,13 +1050,13 @@ body.dark .preview-area {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  border-radius: 0;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  transition: box-shadow 0.3s ease;
 }
 
-body.dark .canvas-container {
-  background: transparent;
-  border: none;
-  box-shadow: none;
+body.dark .canvas-container canvas {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 canvas {
@@ -1064,6 +1064,12 @@ canvas {
   max-width: 100%;
   height: auto;
   border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  transition: box-shadow 0.3s ease;
+}
+
+body.dark canvas {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 /* 预览区域工具栏 */
