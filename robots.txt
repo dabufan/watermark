@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://aishuiyin.vercel.app/sitemap.xml
