@@ -1238,8 +1238,6 @@ body.dark .footer {
   pointer-events: auto;
   max-width: 300px;
   overflow: visible;
-  clip-path: none;
-  contain: none;
 }
 
 .history-panel:hover {
@@ -1257,18 +1255,21 @@ body.dark .footer {
   max-width: 240px;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
-  padding: 0;
+  padding: 8px;
   clip-path: none;
   contain: none;
+  position: relative;
+  z-index: 1;
 }
 
 .history-thumbnails::-webkit-scrollbar {
   display: none;
 }
 
-.history-thumbnails {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+.history-thumbnail-container {
+  position: relative;
+  display: inline-block;
+  z-index: 2;
 }
 
 .history-thumbnail {
@@ -1331,7 +1332,7 @@ body.dark .footer {
   justify-content: center;
   opacity: 0;
   transition: all 0.3s ease;
-  z-index: 10000;
+  z-index: 9999;
   pointer-events: auto;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
