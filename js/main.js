@@ -844,6 +844,14 @@
      const pos = getPointer(e);
      watermarkPos.x = pos.x - dragOffset.x;
      watermarkPos.y = pos.y - dragOffset.y;
+     
+     // 实时更新当前历史记录中的水印位置
+     if (currentHistoryIndex >= 0 && historyList[currentHistoryIndex]) {
+       historyList[currentHistoryIndex].watermarkPos = { ...watermarkPos };
+       historyList[currentHistoryIndex].displayWidth = canvas.width;
+       historyList[currentHistoryIndex].displayHeight = canvas.height;
+     }
+     
      drawWatermark();
    }
    function endDrag(e) { 
@@ -1219,7 +1227,10 @@
       size: file.size || 0,
       timestamp: new Date().toISOString(),
       imageDataUrl: imageDataUrl,
-      thumbnail: thumbnail
+      thumbnail: thumbnail,
+      watermarkPos: { ...watermarkPos }, // 保存当前水印位置
+      displayWidth: canvas.width, // 保存显示宽度
+      displayHeight: canvas.height // 保存显示高度
     };
     
     // 移除重复项（如果有相同的图片）
@@ -1382,8 +1393,19 @@
       canvas.width = displayWidth;
       canvas.height = displayHeight;
       
-      // 设置水印位置
-      watermarkPos = { x: displayWidth * 0.75, y: displayHeight * 0.85 };
+      // 恢复保存的水印位置，如果没有则使用默认位置
+      if (item.watermarkPos) {
+        // 按比例调整水印位置
+        const scaleX = displayWidth / item.displayWidth;
+        const scaleY = displayHeight / item.displayHeight;
+        watermarkPos = {
+          x: item.watermarkPos.x * scaleX,
+          y: item.watermarkPos.y * scaleY
+        };
+      } else {
+        // 使用默认位置
+        watermarkPos = { x: displayWidth * 0.75, y: displayHeight * 0.85 };
+      }
       
       // 切换到编辑模式
       switchToEditMode();
