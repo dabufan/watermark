@@ -531,7 +531,7 @@
          setTimeout(() => {
            try {
              loadImage(imgs[0]);
-             showToast(`已粘贴 ${imgs.length} 张图片 ✅`);
+             // showToast(`已粘贴 ${imgs.length} 张图片 ✅`);
              console.log('成功处理粘贴的图片');
            } catch (error) {
              console.error('加载粘贴图片失败:', error);
@@ -1419,7 +1419,7 @@
       // 更新显示
       updateHistoryDisplay();
       
-      showToast('已加载历史图片');
+      // showToast('已加载历史图片');
     };
     img.src = item.imageDataUrl;
   }
