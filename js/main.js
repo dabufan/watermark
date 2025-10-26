@@ -637,11 +637,14 @@
          ctx.fillStyle = fontColor;
          ctx.fillText(text, x, y);
        }
-       if (watermarkImage) {
-         const w = canvas.width * 0.15;
-         const h = watermarkImage.height / watermarkImage.width * w;
-         ctx.drawImage(watermarkImage, x, y - h, w, h);
-       }
+      if (watermarkImage) {
+        // 使用fontSize控制logo大小，将px转换为百分比
+        const fontSize = parseFloat(document.getElementById('fontSize').value) || 24;
+        const logoSizePercent = (fontSize / 72) * 30; // 将12-72px映射到5-30%
+        const w = canvas.width * (logoSizePercent / 100);
+        const h = watermarkImage.height / watermarkImage.width * w;
+        ctx.drawImage(watermarkImage, x, y - h, w, h);
+      }
      }
    }
    
