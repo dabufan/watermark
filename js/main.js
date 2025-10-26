@@ -512,10 +512,10 @@
        console.log('准备加载粘贴的图片:', imgs.length, '张');
        
        // 检查图片大小
-       const oversizedImages = imgs.filter(img => img.size > 5 * 1024 * 1024);
+       const oversizedImages = imgs.filter(img => img.size > 20 * 1024 * 1024);
        if (oversizedImages.length > 0) {
-         showToast(`检测到 ${oversizedImages.length} 张图片过大（>5MB），将跳过这些图片`, 5000);
-         imgs = imgs.filter(img => img.size <= 5 * 1024 * 1024);
+         showToast(`检测到 ${oversizedImages.length} 张图片过大（>20MB），将跳过这些图片`, 5000);
+         imgs = imgs.filter(img => img.size <= 20 * 1024 * 1024);
        }
        
        if (imgs.length > 0) {
@@ -610,9 +610,9 @@
        });
        
        // 对于大文件，直接拒绝
-       if (file.size > 5 * 1024 * 1024) { // 5MB
+       if (file.size > 20 * 1024 * 1024) { // 20MB
          console.log('文件过大，拒绝处理');
-         showToast('图片文件过大（>5MB），请使用更小的图片', 5000);
+         showToast('图片文件过大（>20MB），请使用更小的图片', 5000);
          return;
        }
        
