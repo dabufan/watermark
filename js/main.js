@@ -376,6 +376,12 @@
     dropZone.addEventListener('click', function(e) {
       console.log('点击上传区域');
       
+      // 检查是否点击的是canvas（水印拖拽区域）
+      if (e.target === canvas || canvas.contains(e.target)) {
+        console.log('点击的是canvas区域，不触发上传');
+        return;
+      }
+      
       // 检查是否点击的是上传提示区域（label）
       const uploadPrompt = document.getElementById('uploadPrompt');
       if (uploadPrompt && uploadPrompt.contains(e.target)) {
@@ -825,6 +831,8 @@
      const pos = getPointer(e);
      const { x, y } = pos;
      if (isInWatermark(x, y)) {
+       e.preventDefault();
+       e.stopPropagation();
        dragging = true;
        dragOffset.x = x - watermarkPos.x;
        dragOffset.y = y - watermarkPos.y;
@@ -838,7 +846,13 @@
      watermarkPos.y = pos.y - dragOffset.y;
      drawWatermark();
    }
-   function endDrag() { dragging = false; }
+   function endDrag(e) { 
+     if (dragging) {
+       e.preventDefault();
+       e.stopPropagation();
+     }
+     dragging = false; 
+   }
    
    function getPointer(e) {
      const rect = canvas.getBoundingClientRect();
