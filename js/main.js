@@ -439,6 +439,17 @@
       if (files.length) {
         imagesList.push(...files);
         loadImage(files[0]);
+        
+        // 为所有图片添加到历史记录
+        files.forEach(async (file) => {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            await addToHistory(file, e.target.result);
+            updateHistoryDisplay();
+          };
+          reader.readAsDataURL(file);
+        });
+        
         showToast(`已添加 ${files.length} 张图片 ✅`);
       } else {
         showToast('请拖拽图片文件');
@@ -454,6 +465,17 @@
       if (files.length) {
         imagesList.push(...files);
         loadImage(files[0]);
+        
+        // 为所有图片添加到历史记录
+        files.forEach(async (file) => {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            await addToHistory(file, e.target.result);
+            updateHistoryDisplay();
+          };
+          reader.readAsDataURL(file);
+        });
+        
         showToast(`已选择 ${files.length} 张图片 ✅`);
       } else {
         showToast('请选择图片文件');
