@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在线图片加水印 · AI设计神器</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="libs/jszip.min.js"></script>
+  <script src="libs/FileSaver.min.js"></script>
+</head>
+<body>
+  <!-- 页头 -->
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <div class="logo-icon">🎨</div>
+        <div class="logo-text">加水印</div>
+      </div>
+      <button class="theme-toggle" id="themeToggle">
+        <span>🌓</span>
+        <span>主题</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 主容器 -->
+  <div class="container">
+    <!-- 默认状态：只显示上传区域 -->
+    <div class="upload-only-layout" id="uploadOnlyLayout">
+      <div class="upload-area" id="dropZone">
+        <div class="upload-icon">☁️</div>
+        <div class="upload-text">上传图片</div>
+        <div class="upload-hint">支持 Cmd + V 快速粘贴或者手机上传</div>
+        <div class="upload-features">
+          <div class="upload-feature">
+            <span>📱</span>
+            <span>手机上传</span>
+          </div>
+          <div class="upload-feature">
+            <span>⌨️</span>
+            <span>键盘粘贴</span>
+          </div>
+          <div class="upload-feature">
+            <span>🖱️</span>
+            <span>拖拽上传</span>
+          </div>
+        </div>
+        <input type="file" id="imgInput" accept="image/*" multiple hidden />
+      </div>
+    </div>
+
+    <!-- 编辑状态：显示预览区域和控制面板 -->
+    <div class="main-layout" id="mainLayout" style="display: none;">
+      <!-- 预览区域 -->
+      <div class="preview-section">
+        <div class="preview-area" id="preview">
+          <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 控制面板 -->
+      <div class="control-panel">
+        <!-- 添加水印区域 -->
+        <div class="watermark-controls">
+          <div class="add-watermark-section">
+            <div class="watermark-control-row">
+              <div class="color-picker-wrapper">
+                <input type="color" id="fontColor" class="color-picker" value="#ffffff">
+              </div>
+              
+              <input type="text" id="watermarkText" class="watermark-input" placeholder="输入水印文字">
+              
+              <span class="input-separator">或</span>
+              
+              <button class="btn-upload-logo" id="uploadLogoBtn">
+                <span class="btn-icon">↑</span>
+                <span class="btn-text">水印LOGO</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 水印属性调节 -->
+          <div class="watermark-properties">
+            <div class="property-group">
+              <label class="property-label">透明度</label>
+              <div class="slider-wrapper">
+                <input type="range" id="opacity" class="property-slider" min="0" max="1" step="0.05" value="0.5">
+                <span class="slider-value" id="opacityValue">50%</span>
+              </div>
+            </div>
+
+            <div class="property-group">
+              <label class="property-label">平铺</label>
+              <div class="toggle-wrapper">
+                <input type="checkbox" id="tileMode" class="toggle-switch">
+                <label for="tileMode" class="toggle-label"></label>
+              </div>
+            </div>
+
+            <div class="property-group">
+              <label class="property-label">疏密</label>
+              <div class="slider-wrapper">
+                <input type="range" id="tileGap" class="property-slider" min="50" max="500" step="10" value="150">
+                <span class="slider-value" id="densityValue">150</span>
+              </div>
+            </div>
+
+            <div class="property-group">
+              <label class="property-label">大小</label>
+              <div class="slider-wrapper">
+                <input type="range" id="fontSize" class="property-slider" min="12" max="72" step="2" value="24">
+                <span class="slider-value" id="sizeValue">24px</span>
+              </div>
+            </div>
+
+            <div class="property-group">
+              <label class="property-label">旋转</label>
+              <div class="rotation-wrapper">
+                <input type="number" id="rotate" class="rotation-input" value="0" min="-180" max="180">
+                <span class="rotation-unit">°</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="action-buttons">
+            <button class="btn-download" id="downloadBtn">
+              <span class="btn-icon">⬇️</span>
+              <span class="btn-text">下载图片</span>
+            </button>
+            <button class="btn-delete" id="deleteBtn">
+              <span class="btn-icon">🗑️</span>
+              <span class="btn-text">删除图片</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 隐藏的文件输入和模式选择 -->
+        <input type="file" id="watermarkImg" class="file-input" accept="image/*" style="display: none;">
+        <select id="mode" style="display: none;">
+          <option value="single">单个水印</option>
+          <option value="tile">平铺水印</option>
+        </select>
+        
+        <!-- 进度条 -->
+        <div class="progress-container" id="progressContainer" style="display: none;">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+          </div>
+          <div class="progress-text" id="progressDetails"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 页脚 -->
+  <footer class="footer">
+    <p>© 2025 AI设计神器 | 本地运行，无数据上传</p>
+  </footer>
+
+  <!-- Toast 提示 -->
+  <div class="toast" id="toast">提示</div>
+
+  <!-- 脚本 -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
