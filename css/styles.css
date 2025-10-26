@@ -1242,6 +1242,12 @@ body.dark .footer {
   contain: none;
 }
 
+.history-panel:hover {
+  transform: scale(1.2);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.98);
+}
+
 .history-thumbnails {
   display: flex;
   gap: 6px;
@@ -1257,20 +1263,12 @@ body.dark .footer {
 }
 
 .history-thumbnails::-webkit-scrollbar {
-  height: 4px;
+  display: none;
 }
 
-.history-thumbnails::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.history-thumbnails::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 2px;
-}
-
-.history-thumbnails::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.5);
+.history-thumbnails {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 .history-thumbnail {
@@ -1289,6 +1287,7 @@ body.dark .footer {
   border-color: #3b82f6;
   transform: scale(1.1);
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  z-index: 10;
 }
 
 .history-thumbnail.active {
@@ -1330,8 +1329,8 @@ body.dark .footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.7;
-  transition: all 0.2s ease;
+  opacity: 0;
+  transition: all 0.3s ease;
   z-index: 10000;
   pointer-events: auto;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -1340,16 +1339,16 @@ body.dark .footer {
 .history-thumbnail-container:hover .history-delete-btn {
   opacity: 1 !important;
   background: #dc2626 !important;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.5) !important;
-  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.6) !important;
+  transform: scale(1.4);
 }
 
 /* 删除按钮悬停效果 */
 .history-delete-btn:hover {
   opacity: 1 !important;
   background: #dc2626 !important;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.5) !important;
-  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.8) !important;
+  transform: scale(1.5);
 }
 
 
@@ -1361,21 +1360,18 @@ body.dark .history-panel {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-body.dark .history-thumbnails {
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+body.dark .history-panel:hover {
+  transform: scale(1.2);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  background: rgba(31, 41, 55, 0.98);
 }
 
-body.dark .history-thumbnails::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-body.dark .history-thumbnails::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
 
 body.dark .history-thumbnail:hover {
   border-color: #60a5fa;
   box-shadow: 0 2px 8px rgba(96, 165, 250, 0.3);
+  transform: scale(1.1);
+  z-index: 10;
 }
 
 body.dark .history-thumbnail.active {
