@@ -316,7 +316,7 @@ body.dark .btn-upload-logo:hover {
 }
 
 .property-label {
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 600;
   color: #374151;
   white-space: nowrap;
@@ -446,7 +446,7 @@ body.dark .property-label {
 }
 
 .slider-value {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
   color: #374151;
   min-width: 35px;
@@ -511,7 +511,7 @@ body.dark .slider-value {
   padding: 4px 6px;
   border: 1px solid #d1d5db;
   border-radius: 3px;
-  font-size: 11px;
+  font-size: 13px;
   text-align: center;
   outline: none;
   transition: border-color 0.2s ease;
@@ -535,7 +535,7 @@ body.dark .rotation-input:focus {
 }
 
 .rotation-unit {
-  font-size: 11px;
+  font-size: 13px;
   color: #6b7280;
   font-weight: 500;
 }
