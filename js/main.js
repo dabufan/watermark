@@ -1383,7 +1383,7 @@
       // 更新显示
       updateHistoryDisplay();
       
-      showToast(`已加载历史图片: ${item.name}`);
+      showToast('已加载历史图片');
     };
     img.src = item.imageDataUrl;
   }
