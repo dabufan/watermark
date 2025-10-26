@@ -82,8 +82,27 @@ body.dark .header {
   color: #1e293b;
 }
 
+.logo-main {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.logo-sub {
+  font-size: 14px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
 body.dark .logo-text {
   color: #f1f5f9;
+}
+
+body.dark .logo-main {
+  color: #f1f5f9;
+}
+
+body.dark .logo-sub {
+  color: #cbd5e1;
 }
 
 .theme-toggle {
