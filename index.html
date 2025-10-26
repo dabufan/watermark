@@ -25,37 +25,28 @@
 
   <!-- 主容器 -->
   <div class="container">
-    <!-- 默认状态：只显示上传区域 -->
-    <div class="upload-only-layout" id="uploadOnlyLayout">
-      <div class="upload-area" id="dropZone">
-        <div class="upload-icon">☁️</div>
-        <div class="upload-text">上传图片</div>
-        <div class="upload-hint">支持 Cmd + V 快速粘贴或者手机上传</div>
-        <div class="upload-features">
-          <div class="upload-feature">
-            <span>📱</span>
-            <span>手机上传</span>
-          </div>
-          <div class="upload-feature">
-            <span>⌨️</span>
-            <span>键盘粘贴</span>
-          </div>
-          <div class="upload-feature">
-            <span>🖱️</span>
-            <span>拖拽上传</span>
-          </div>
-        </div>
-        <input type="file" id="imgInput" accept="image/*" multiple hidden />
-      </div>
-    </div>
-
     <!-- 编辑状态：显示预览区域和控制面板 -->
-    <div class="main-layout" id="mainLayout" style="display: none;">
+    <div class="main-layout" id="mainLayout">
       <!-- 预览区域 -->
       <div class="preview-section">
         <div class="preview-area" id="preview">
           <div class="canvas-container">
             <canvas id="canvas"></canvas>
+          </div>
+          
+          <!-- 无图片时的上传提示 -->
+          <div class="upload-prompt" id="uploadPrompt">
+            <div class="upload-icon">☁️</div>
+            <div class="upload-text">上传图片开始编辑</div>
+            <div class="upload-hint">支持 Cmd + V 快速粘贴、拖拽上传或点击上传</div>
+            <input type="file" id="imgInput" accept="image/*" multiple hidden />
+          </div>
+        </div>
+        
+        <!-- 历史记录面板 -->
+        <div class="history-panel" id="historyPanel">
+          <div class="history-thumbnails" id="historyThumbnails">
+            <!-- 历史记录缩略图将在这里动态添加 -->
           </div>
         </div>
       </div>
@@ -130,9 +121,9 @@
               <span class="btn-icon">⬇️</span>
               <span class="btn-text">下载图片</span>
             </button>
-            <button class="btn-delete" id="deleteBtn">
-              <span class="btn-icon">🗑️</span>
-              <span class="btn-text">删除图片</span>
+            <button class="btn-copy" id="copyBtn">
+              <span class="btn-icon">📋</span>
+              <span class="btn-text">复制图片</span>
             </button>
           </div>
         </div>

@@ -8,23 +8,28 @@
    import { showToast, updateProgress, resetProgress, playDing } from './ui.js';
    import { loadSettings, initSettingsAutoSave } from './settings.js';
    
-  // ========== 全局变量 ==========
+   // ========== 全局变量 ==========
   let dropZone, imgInput, watermarkImgInput, canvas, ctx;
+   
+   let baseImage = null;
+   let watermarkImage = null;
+   let imagesList = [];
+   let watermarkPos = { x: 50, y: 50 };
+   const CONCURRENCY = 3; // 默认并行数量
   
-  let baseImage = null;
-  let watermarkImage = null;
-  let imagesList = [];
-  let watermarkPos = { x: 50, y: 50 };
-  const CONCURRENCY = 3; // 默认并行数量
-  
-  // 初始化设置
-  window.addEventListener('DOMContentLoaded', () => {
+  // 历史记录相关变量
+  let historyList = [];
+  let currentHistoryIndex = -1;
+  const maxHistoryItems = 20;
+   
+   // 初始化设置
+   window.addEventListener('DOMContentLoaded', () => {
     console.log('DOM加载完成，开始初始化...');
     
     // 延迟获取DOM元素，确保所有元素都已渲染
     setTimeout(() => {
       // 获取DOM元素
-      dropZone = document.getElementById('dropZone');
+      dropZone = document.getElementById('preview');
       imgInput = document.getElementById('imgInput');
       watermarkImgInput = document.getElementById('watermarkImg');
       canvas = document.getElementById('canvas');
@@ -47,14 +52,28 @@
         return;
       }
       
+      // 添加上传提示的点击事件
+      const uploadPrompt = document.getElementById('uploadPrompt');
+      if (uploadPrompt) {
+        uploadPrompt.addEventListener('click', () => {
+          imgInput.click();
+        });
+      }
+      
       ctx = canvas.getContext('2d');
       
-      loadSettings();
-      initSettingsAutoSave();
+     loadSettings();
+     initSettingsAutoSave();
       showToast('欢迎使用专业水印工具 🎨', 2000);
+      
+      // 初始化历史记录
+      initHistoryPanel();
       
       // 初始化事件监听器
       initEventListeners();
+      
+      // 添加窗口大小变化监听
+      window.addEventListener('resize', handleWindowResize);
       
       console.log('初始化完成');
     }, 100);
@@ -169,15 +188,15 @@
       console.log('下载按钮未找到');
     }
     
-    // 删除按钮
-    const deleteBtn = document.getElementById('deleteBtn');
-    if (deleteBtn) {
-      deleteBtn.onclick = () => {
-        console.log('点击删除按钮');
-        resetUpload();
+    // 复制按钮
+    const copyBtn = document.getElementById('copyBtn');
+    if (copyBtn) {
+      copyBtn.onclick = () => {
+        console.log('点击复制按钮');
+        copyImageToClipboard();
       };
     } else {
-      console.log('删除按钮未找到');
+      console.log('复制按钮未找到');
     }
     
     
@@ -319,33 +338,33 @@
     };
     
     dropZone.ondrop = function(e) {
-      e.preventDefault();
+     e.preventDefault();
       e.stopPropagation();
       console.log('拖拽放下');
       dropZone.classList.remove('dragover');
       
-      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+     const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
       console.log('拖拽文件:', files);
       
-      if (files.length) {
-        imagesList.push(...files);
-        loadImage(files[0]);
-        showToast(`已添加 ${files.length} 张图片 ✅`);
+     if (files.length) {
+       imagesList.push(...files);
+       loadImage(files[0]);
+       showToast(`已添加 ${files.length} 张图片 ✅`);
       } else {
         showToast('请拖拽图片文件');
-      }
+     }
     };
-    
+   
     // 文件选择事件 - 简化版本
     imgInput.onchange = function(e) {
       console.log('文件选择变化');
-      const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
+     const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
       console.log('选择的文件:', files);
       
-      if (files.length) {
-        imagesList.push(...files);
-        loadImage(files[0]);
-        showToast(`已选择 ${files.length} 张图片 ✅`);
+     if (files.length) {
+       imagesList.push(...files);
+       loadImage(files[0]);
+       showToast(`已选择 ${files.length} 张图片 ✅`);
       } else {
         showToast('请选择图片文件');
       }
@@ -375,7 +394,7 @@
       }
       
       console.log('剪贴板项目数量:', items.length);
-      const imgs = [];
+     const imgs = [];
       
       // 处理剪贴板项目
       for (let i = 0; i < items.length; i++) {
@@ -405,9 +424,9 @@
       }
       
       if (imgs.length > 0) {
-        imagesList.push(...imgs);
-        loadImage(imgs[0]);
-        showToast(`已粘贴 ${imgs.length} 张图片 ✅`);
+       imagesList.push(...imgs);
+       loadImage(imgs[0]);
+       showToast(`已粘贴 ${imgs.length} 张图片 ✅`);
         console.log('成功处理粘贴的图片');
       } else {
         console.log('没有找到图片数据');
@@ -418,18 +437,49 @@
     console.log('粘贴功能初始化完成');
   }
    
-  // ========== 加载主图 ==========
-  function loadImage(file) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
+   // 处理窗口大小变化
+  function handleWindowResize() {
+    if (baseImage) {
+      // 重新计算图片尺寸
+      const containerHeight = window.innerHeight * 0.7; // 70vh
+      const containerWidth = window.innerWidth;
+      const maxWidth = Math.min(1200, containerWidth * 0.9);
+      const maxHeight = Math.min(800, containerHeight * 0.9);
+      
+      const scaleX = maxWidth / baseImage.width;
+      const scaleY = maxHeight / baseImage.height;
+      const scale = Math.min(scaleX, scaleY, 1);
+      
+      const displayWidth = baseImage.width * scale;
+      const displayHeight = baseImage.height * scale;
+      
+      // 重新设置画布尺寸
+      canvas.width = displayWidth;
+      canvas.height = displayHeight;
+      
+      // 重新设置水印位置
+      watermarkPos = { x: displayWidth * 0.75, y: displayHeight * 0.85 };
+      
+      // 重新绘制
+      drawWatermark();
+    }
+  }
+   
+   // ========== 加载主图 ==========
+   function loadImage(file) {
+     const reader = new FileReader();
+     reader.onload = e => {
+       const img = new Image();
+       img.onload = () => {
         console.log('图片加载完成:', img.width, 'x', img.height);
-        baseImage = img;
+         baseImage = img;
         
-        // 计算缩放比例，确保图片完全显示
-        const maxWidth = 1200;
-        const maxHeight = 800;
+        // 计算缩放比例，确保图片完全显示在固定容器中
+        const containerHeight = window.innerHeight * 0.7; // 70vh
+        const containerWidth = window.innerWidth;
+        const maxWidth = Math.min(1200, containerWidth * 0.9);
+        const maxHeight = Math.min(800, containerHeight * 0.9);
+        
         const scaleX = maxWidth / img.width;
         const scaleY = maxHeight / img.height;
         const scale = Math.min(scaleX, scaleY, 1); // 不放大，只缩小
@@ -452,45 +502,52 @@
         // 添加预览区域功能
         addPreviewFeatures(file);
         
-        drawWatermark();
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
+        // 添加到历史记录
+        addToHistory(file, e.target.result).then(() => {
+          // 设置当前历史记录索引为0（最新添加的）
+          currentHistoryIndex = 0;
+          updateHistoryDisplay();
+        });
+        
+         drawWatermark();
+       };
+       img.src = e.target.result;
+     };
+     reader.readAsDataURL(file);
+   }
    
   // 初始化水印功能
   function initWatermarkEvents() {
     // 水印图片加载
     if (watermarkImgInput) {
-      watermarkImgInput.addEventListener('change', e => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = ev => {
-            watermarkImage = new Image();
-            watermarkImage.onload = drawWatermark;
-            watermarkImage.src = ev.target.result;
-          };
-          reader.readAsDataURL(file);
-        }
-      });
+   watermarkImgInput.addEventListener('change', e => {
+     const file = e.target.files[0];
+     if (file) {
+       const reader = new FileReader();
+       reader.onload = ev => {
+         watermarkImage = new Image();
+         watermarkImage.onload = drawWatermark;
+         watermarkImage.src = ev.target.result;
+       };
+       reader.readAsDataURL(file);
+     }
+   });
     }
     
     // 拖拽定位水印
     initDragEvents();
   }
-  
+   
   // 拖拽定位水印
-  let dragging = false;
-  let dragOffset = { x: 0, y: 0 };
+   let dragging = false;
+   let dragOffset = { x: 0, y: 0 };
   
   function initDragEvents() {
     if (!canvas) return;
-    
-    canvas.addEventListener('mousedown', startDrag);
-    canvas.addEventListener('mousemove', onDrag);
-    canvas.addEventListener('mouseup', endDrag);
+   
+   canvas.addEventListener('mousedown', startDrag);
+   canvas.addEventListener('mousemove', onDrag);
+   canvas.addEventListener('mouseup', endDrag);
   }
   
   // 初始化设置监听
@@ -531,13 +588,13 @@
    }
    function endDrag() { dragging = false; }
    
-  function getPointer(e) {
-    const rect = canvas.getBoundingClientRect();
-    return {
+   function getPointer(e) {
+     const rect = canvas.getBoundingClientRect();
+     return {
       x: (e.clientX - rect.left) * (canvas.width / rect.width),
       y: (e.clientY - rect.top) * (canvas.height / rect.height)
-    };
-  }
+     };
+   }
    function isInWatermark(x, y) {
      const size = 200;
      return x > watermarkPos.x - size/2 && x < watermarkPos.x + size/2 &&
@@ -598,56 +655,56 @@
           return;
         }
         
-        const quality = parseFloat(document.getElementById('quality').value);
-        const zip = new JSZip();
-        const manifest = [];
-        const startTime = Date.now();
-      
-        showToast('开始批量处理...');
-        resetProgress();
-      
-        let index = 0;
-        let active = 0;
-        let completed = 0;
-        const total = imagesList.length;
-      
-        function next() {
-          while (active < CONCURRENCY && index < total) {
-            const file = imagesList[index++];
-            active++;
-            const currentIndex = index;
-            processImage(file, quality).then(({ imgName, dataUrl, timeCost }) => {
-              zip.file(imgName, dataUrl.split(',')[1], { base64: true });
-              manifest.push(`${imgName} | ${timeCost}ms`);
-              active--;
-              completed++;
-              const percent = Math.round((completed / total) * 100);
-              const elapsed = (Date.now() - startTime) / 1000;
-              const est = ((elapsed / completed) * (total - completed)).toFixed(1);
-              updateProgress(percent, `正在处理第 ${currentIndex} / ${total} 张，剩余约 ${est}s`);
-              if (completed === total) finalize();
-              else next();
-            });
-          }
-        }
-      
-        function finalize() {
-          manifest.push(`总计：${total} 张`);
-          manifest.push(`导出时间：${new Date().toLocaleString()}`);
-          manifest.push(`参数：${JSON.stringify(getSettingsSummary())}`);
-          zip.file('manifest.txt', manifest.join('\n'));
-          zip.generateAsync({ type: 'blob' }).then(blob => {
-            const now = new Date();
-            const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}`;
-            saveAs(blob, `watermarked-${timestamp}.zip`);
-            playDing();
-            showToast('✅ 全部处理完成');
-            resetProgress();
-          });
-        }
-      
-        next();
-      });
+     const quality = parseFloat(document.getElementById('quality').value);
+     const zip = new JSZip();
+     const manifest = [];
+     const startTime = Date.now();
+   
+     showToast('开始批量处理...');
+     resetProgress();
+   
+     let index = 0;
+     let active = 0;
+     let completed = 0;
+     const total = imagesList.length;
+   
+     function next() {
+       while (active < CONCURRENCY && index < total) {
+         const file = imagesList[index++];
+         active++;
+         const currentIndex = index;
+         processImage(file, quality).then(({ imgName, dataUrl, timeCost }) => {
+           zip.file(imgName, dataUrl.split(',')[1], { base64: true });
+           manifest.push(`${imgName} | ${timeCost}ms`);
+           active--;
+           completed++;
+           const percent = Math.round((completed / total) * 100);
+           const elapsed = (Date.now() - startTime) / 1000;
+           const est = ((elapsed / completed) * (total - completed)).toFixed(1);
+           updateProgress(percent, `正在处理第 ${currentIndex} / ${total} 张，剩余约 ${est}s`);
+           if (completed === total) finalize();
+           else next();
+         });
+       }
+     }
+   
+     function finalize() {
+       manifest.push(`总计：${total} 张`);
+       manifest.push(`导出时间：${new Date().toLocaleString()}`);
+       manifest.push(`参数：${JSON.stringify(getSettingsSummary())}`);
+       zip.file('manifest.txt', manifest.join('\n'));
+       zip.generateAsync({ type: 'blob' }).then(blob => {
+         const now = new Date();
+         const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}`;
+         saveAs(blob, `watermarked-${timestamp}.zip`);
+         playDing();
+         showToast('✅ 全部处理完成');
+         resetProgress();
+       });
+     }
+   
+     next();
+   });
     }
   }
    
@@ -687,22 +744,7 @@
     if (existingInfo) existingInfo.remove();
     if (existingHint) existingHint.remove();
     
-    // 添加工具栏
-    const toolbar = document.createElement('div');
-    toolbar.className = 'preview-toolbar';
-    toolbar.innerHTML = `
-      <button class="btn" onclick="resetUpload()">
-        <span>🔄</span>
-        <span>重新上传</span>
-      </button>
-      <button class="btn" onclick="downloadCurrentImage()">
-        <span>💾</span>
-        <span>下载图片</span>
-      </button>
-    `;
-    preview.appendChild(toolbar);
-    
-    // 不添加图片信息和水印提示，只显示图片
+    // 不添加任何工具栏，保持预览区简洁
   }
   
   // 格式化文件大小
@@ -724,6 +766,33 @@
     link.click();
     
     showToast('图片已下载 ✅');
+  }
+  
+  // 复制图片到剪切板
+  async function copyImageToClipboard() {
+    if (!baseImage) {
+      showToast('请先上传图片', 2000);
+      return;
+    }
+    
+    try {
+      // 将canvas转换为blob
+      const blob = await new Promise(resolve => {
+        canvas.toBlob(resolve, 'image/png', 1);
+      });
+      
+      // 复制到剪切板
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'image/png': blob
+        })
+      ]);
+      
+      showToast('图片已复制到剪切板 ✅');
+    } catch (error) {
+      console.error('复制失败:', error);
+      showToast('复制失败，请重试', 2000);
+    }
   }
   
   // 全局阻止拖拽默认行为
@@ -755,29 +824,24 @@
   // 暴露函数到全局作用域
   window.resetUpload = resetUpload;
   window.downloadCurrentImage = downloadCurrentImage;
+  window.copyImageToClipboard = copyImageToClipboard;
   
   // 切换到编辑模式
   function switchToEditMode() {
-    const uploadOnlyLayout = document.getElementById('uploadOnlyLayout');
-    const mainLayout = document.getElementById('mainLayout');
-    
-    if (uploadOnlyLayout && mainLayout) {
-      uploadOnlyLayout.style.display = 'none';
-      mainLayout.style.display = 'flex';
-      console.log('已切换到编辑模式');
+    const uploadPrompt = document.getElementById('uploadPrompt');
+    if (uploadPrompt) {
+      uploadPrompt.style.display = 'none';
     }
+    console.log('已切换到编辑模式');
   }
   
   // 切换到上传模式
   function switchToUploadMode() {
-    const uploadOnlyLayout = document.getElementById('uploadOnlyLayout');
-    const mainLayout = document.getElementById('mainLayout');
-    
-    if (uploadOnlyLayout && mainLayout) {
-      uploadOnlyLayout.style.display = 'flex';
-      mainLayout.style.display = 'none';
-      console.log('已切换到上传模式');
+    const uploadPrompt = document.getElementById('uploadPrompt');
+    if (uploadPrompt) {
+      uploadPrompt.style.display = 'block';
     }
+    console.log('已切换到上传模式');
   }
   
   // 重置上传
@@ -795,12 +859,357 @@
     if (imgInput) imgInput.value = '';
     
     showToast('已重置，可以重新上传图片');
+   }
+   
+   // 获取当前设置摘要
+   function getSettingsSummary() {
+     const keys = ['watermarkText','fontSize','fontColor','opacity','rotate','mode','tileGap','quality'];
+     const summary = {};
+     keys.forEach(k => summary[k] = document.getElementById(k).value);
+     return summary;
+   }
+  
+  // ========== 历史记录功能 ==========
+  
+  // 初始化历史记录面板
+  function initHistoryPanel() {
+    
+    // 从localStorage加载历史记录
+    loadHistoryFromStorage();
+    
+    // 添加调试功能
+    console.log('历史记录面板初始化完成');
+    console.log('历史记录数量:', historyList.length);
   }
   
-  // 获取当前设置摘要
-  function getSettingsSummary() {
-    const keys = ['watermarkText','fontSize','fontColor','opacity','rotate','mode','tileGap','quality'];
-    const summary = {};
-    keys.forEach(k => summary[k] = document.getElementById(k).value);
-    return summary;
+  // 保存历史记录到localStorage
+  function saveHistoryToStorage() {
+    try {
+      localStorage.setItem('watermark_history', JSON.stringify(historyList));
+    } catch (error) {
+      console.error('保存历史记录失败:', error);
+    }
   }
+  
+  // 从localStorage加载历史记录
+  function loadHistoryFromStorage() {
+    try {
+      const saved = localStorage.getItem('watermark_history');
+      if (saved) {
+        historyList = JSON.parse(saved);
+        updateHistoryDisplay();
+      }
+    } catch (error) {
+      console.error('加载历史记录失败:', error);
+    }
+  }
+  
+  // 添加图片到历史记录
+  async function addToHistory(file, imageDataUrl) {
+    // 先创建缩略图
+    const thumbnail = await createThumbnail(imageDataUrl);
+    
+    const historyItem = {
+      id: Date.now(),
+      name: file.name || '未命名图片',
+      size: file.size || 0,
+      timestamp: new Date().toISOString(),
+      imageDataUrl: imageDataUrl,
+      thumbnail: thumbnail
+    };
+    
+    // 移除重复项（如果有相同的图片）
+    historyList = historyList.filter(item => item.imageDataUrl !== imageDataUrl);
+    
+    // 添加到开头
+    historyList.unshift(historyItem);
+    
+    // 限制历史记录数量
+    if (historyList.length > maxHistoryItems) {
+      historyList = historyList.slice(0, maxHistoryItems);
+    }
+    
+    // 更新当前索引
+    currentHistoryIndex = 0;
+    
+    // 保存到localStorage
+    saveHistoryToStorage();
+    
+    // 更新显示
+    updateHistoryDisplay();
+  }
+  
+  // 创建缩略图
+  function createThumbnail(imageDataUrl) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 设置缩略图尺寸
+        const size = 40;
+        canvas.width = size;
+        canvas.height = size;
+        
+        // 绘制缩略图
+        ctx.drawImage(img, 0, 0, size, size);
+        
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = () => resolve(null);
+      img.src = imageDataUrl;
+    });
+  }
+  
+  // 更新历史记录显示
+  function updateHistoryDisplay() {
+    const historyThumbnails = document.getElementById('historyThumbnails');
+    if (!historyThumbnails) return;
+    
+    historyThumbnails.innerHTML = '';
+    
+    if (historyList.length === 0) {
+      return; // 如果没有历史记录，不显示任何内容
+    }
+    
+    // 显示所有历史记录
+    console.log('更新历史记录显示:', {
+      historyListLength: historyList.length,
+      currentHistoryIndex: currentHistoryIndex
+    });
+    
+    historyList.forEach((item, index) => {
+      // 创建缩略图容器
+      const thumbnailContainer = document.createElement('div');
+      thumbnailContainer.style.position = 'relative';
+      thumbnailContainer.style.display = 'inline-block';
+      
+      // 创建缩略图
+      const thumbnail = document.createElement('img');
+      const isActive = index === currentHistoryIndex;
+      thumbnail.className = `history-thumbnail ${isActive ? 'active' : ''}`;
+      
+      console.log(`缩略图 ${index}:`, {
+        itemId: item.id,
+        isActive: isActive,
+        className: thumbnail.className
+      });
+      
+      // 优先使用缩略图，如果没有则使用原图
+      thumbnail.src = item.thumbnail || item.imageDataUrl;
+      thumbnail.alt = item.name;
+      thumbnail.title = `${item.name} - ${formatTime(item.timestamp)}`;
+      
+      // 如果缩略图加载失败，使用原图
+      thumbnail.onerror = () => {
+        if (thumbnail.src !== item.imageDataUrl) {
+          thumbnail.src = item.imageDataUrl;
+        }
+      };
+      
+      // 创建删除按钮
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'history-delete-btn';
+      deleteBtn.innerHTML = '×';
+      deleteBtn.title = '删除此历史记录';
+      
+      // 添加调试信息
+      console.log(`删除按钮状态 - 索引: ${index}, 当前索引: ${currentHistoryIndex}, 是否激活: ${isActive}`);
+      console.log(`缩略图类名: ${thumbnail.className}`);
+      
+      // 添加点击事件
+      thumbnail.addEventListener('click', () => {
+        console.log('点击缩略图，加载历史记录:', item.id);
+        loadFromHistory(item.id);
+      });
+      
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // 阻止事件冒泡
+        console.log('点击删除按钮，删除历史记录:', item.id);
+        removeFromHistory(item.id);
+      });
+      
+      // 组装元素
+      thumbnailContainer.appendChild(thumbnail);
+      thumbnailContainer.appendChild(deleteBtn);
+      historyThumbnails.appendChild(thumbnailContainer);
+    });
+    
+    // 滚动到当前激活的项目
+    setTimeout(() => {
+      const activeThumbnail = historyThumbnails.querySelector('.history-thumbnail.active');
+      if (activeThumbnail) {
+        activeThumbnail.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        });
+      }
+    }, 100);
+  }
+  
+  // 从历史记录加载图片
+  function loadFromHistory(id) {
+    const item = historyList.find(item => item.id === id);
+    if (!item) return;
+    
+    // 直接从base64数据创建图片
+    const img = new Image();
+    img.onload = () => {
+      console.log('从历史记录加载图片:', img.width, 'x', img.height);
+      baseImage = img;
+      
+      // 计算缩放比例，确保图片完全显示在固定容器中
+      const containerHeight = window.innerHeight * 0.7; // 70vh
+      const containerWidth = window.innerWidth;
+      const maxWidth = Math.min(1200, containerWidth * 0.9);
+      const maxHeight = Math.min(800, containerHeight * 0.9);
+      
+      const scaleX = maxWidth / img.width;
+      const scaleY = maxHeight / img.height;
+      const scale = Math.min(scaleX, scaleY, 1);
+      
+      const displayWidth = img.width * scale;
+      const displayHeight = img.height * scale;
+      
+      // 设置画布为显示尺寸
+      canvas.width = displayWidth;
+      canvas.height = displayHeight;
+      
+      // 设置水印位置
+      watermarkPos = { x: displayWidth * 0.75, y: displayHeight * 0.85 };
+      
+      // 切换到编辑模式
+      switchToEditMode();
+      
+      // 绘制水印
+      drawWatermark();
+      
+      // 更新当前索引
+      currentHistoryIndex = historyList.findIndex(item => item.id === id);
+      
+      // 更新显示
+      updateHistoryDisplay();
+      
+      showToast(`已加载历史图片: ${item.name}`);
+    };
+    img.src = item.imageDataUrl;
+  }
+  
+  // 从历史记录中删除
+  function removeFromHistory(id) {
+    const index = historyList.findIndex(item => item.id === id);
+    if (index === -1) return;
+    
+    const item = historyList[index];
+    
+    // 如果删除的是当前显示的图片，需要重置界面
+    if (index === currentHistoryIndex) {
+      // 重置到上传状态
+      switchToUploadMode();
+      
+      // 清空相关变量
+      baseImage = null;
+      watermarkImage = null;
+      
+      // 清空画布
+      if (canvas && ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      
+      // 重置当前索引
+      currentHistoryIndex = -1;
+    } else if (currentHistoryIndex > index) {
+      // 如果删除的是当前图片之前的记录，需要调整当前索引
+      currentHistoryIndex = currentHistoryIndex - 1;
+    }
+    
+    // 从历史记录中删除
+    historyList.splice(index, 1);
+    
+    // 保存到localStorage
+    saveHistoryToStorage();
+    
+    // 更新显示
+    updateHistoryDisplay();
+    
+    showToast('已删除历史记录');
+  }
+  
+  // 格式化时间
+  function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    
+    if (diff < 60000) { // 1分钟内
+      return '刚刚';
+    } else if (diff < 3600000) { // 1小时内
+      return `${Math.floor(diff / 60000)}分钟前`;
+    } else if (diff < 86400000) { // 1天内
+      return `${Math.floor(diff / 3600000)}小时前`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  }
+  
+  // 清空所有历史记录
+  function clearAllHistory() {
+    if (confirm('确定要清空所有历史记录吗？')) {
+      historyList = [];
+      currentHistoryIndex = -1;
+      saveHistoryToStorage();
+      updateHistoryDisplay();
+      showToast('已清空所有历史记录');
+    }
+  }
+  
+  // 导出历史记录功能到全局
+  window.loadFromHistory = loadFromHistory;
+  window.removeFromHistory = removeFromHistory;
+  window.clearAllHistory = clearAllHistory;
+  
+  // 调试功能
+  window.testHistory = function() {
+    console.log('当前历史记录:', historyList);
+    console.log('历史记录面板元素:', document.getElementById('historyPanel'));
+    console.log('历史记录缩略图容器:', document.getElementById('historyThumbnails'));
+    console.log('当前历史记录索引:', currentHistoryIndex);
+    updateHistoryDisplay();
+  };
+  
+  // 调试删除按钮
+  window.testDeleteButtons = function() {
+    const thumbnails = document.querySelectorAll('.history-thumbnail');
+    const deleteButtons = document.querySelectorAll('.history-delete-btn');
+    
+    console.log('=== 删除按钮调试信息 ===');
+    console.log('缩略图数量:', thumbnails.length);
+    console.log('删除按钮数量:', deleteButtons.length);
+    console.log('当前历史记录索引:', currentHistoryIndex);
+    console.log('历史记录总数:', historyList.length);
+    
+    thumbnails.forEach((thumb, index) => {
+      const computedStyle = window.getComputedStyle(thumb);
+      const deleteBtn = thumb.parentElement.querySelector('.history-delete-btn');
+      const deleteBtnStyle = deleteBtn ? window.getComputedStyle(deleteBtn) : null;
+      
+      console.log(`缩略图 ${index}:`, {
+        className: thumb.className,
+        hasActive: thumb.classList.contains('active'),
+        position: computedStyle.position,
+        zIndex: computedStyle.zIndex,
+        deleteButton: {
+          exists: !!deleteBtn,
+          opacity: deleteBtnStyle ? deleteBtnStyle.opacity : 'N/A',
+          display: deleteBtnStyle ? deleteBtnStyle.display : 'N/A',
+          visibility: deleteBtnStyle ? deleteBtnStyle.visibility : 'N/A',
+          position: deleteBtnStyle ? deleteBtnStyle.position : 'N/A',
+          zIndex: deleteBtnStyle ? deleteBtnStyle.zIndex : 'N/A'
+        }
+      });
+    });
+    
+    console.log('=== 调试信息结束 ===');
+  };
