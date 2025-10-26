@@ -927,6 +927,8 @@ body.dark .upload-feature {
   border-radius: 0;
   box-shadow: none;
   width: 100%;
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 body.dark .preview-area {
@@ -1227,8 +1229,8 @@ body.dark .footer {
   gap: 8px;
   background: rgba(255, 255, 255, 0.95);
   border: 2px solid rgba(255, 255, 255, 0.8);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 8px;
+  padding: 4px 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(10px);
   z-index: 1000;
@@ -1236,6 +1238,8 @@ body.dark .footer {
   pointer-events: auto;
   max-width: 300px;
   overflow: visible;
+  clip-path: none;
+  contain: none;
 }
 
 .history-thumbnails {
@@ -1247,6 +1251,9 @@ body.dark .footer {
   max-width: 240px;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+  padding: 0;
+  clip-path: none;
+  contain: none;
 }
 
 .history-thumbnails::-webkit-scrollbar {
@@ -1275,6 +1282,7 @@ body.dark .footer {
   border: 2px solid transparent;
   transition: all 0.2s ease;
   position: relative;
+  display: block;
 }
 
 .history-thumbnail:hover {
@@ -1308,8 +1316,8 @@ body.dark .footer {
 /* 删除按钮 */
 .history-delete-btn {
   position: absolute;
-  top: 0px;
-  right: 0px;
+  top: -4px;
+  right: -4px;
   width: 16px;
   height: 16px;
   border: none;
@@ -1322,24 +1330,26 @@ body.dark .footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
+  opacity: 0.7;
   transition: all 0.2s ease;
-  z-index: 1001;
+  z-index: 10000;
   pointer-events: auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.history-thumbnail.active .history-delete-btn {
+.history-thumbnail-container:hover .history-delete-btn {
   opacity: 1 !important;
   background: #dc2626 !important;
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.5) !important;
-  visibility: visible !important;
-  display: flex !important;
+  transform: scale(1.1);
 }
 
-/* 确保非激活状态的删除按钮隐藏 */
-.history-thumbnail:not(.active) .history-delete-btn {
-  opacity: 0 !important;
-  visibility: hidden !important;
+/* 删除按钮悬停效果 */
+.history-delete-btn:hover {
+  opacity: 1 !important;
+  background: #dc2626 !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.5) !important;
+  transform: scale(1.1);
 }
 
 
@@ -1388,6 +1398,11 @@ body.dark .history-thumbnail.active {
   cursor: pointer;
   transition: all 0.3s ease;
   z-index: 10;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .upload-prompt:hover {

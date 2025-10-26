@@ -35,12 +35,14 @@
           </div>
           
           <!-- 无图片时的上传提示 -->
-          <div class="upload-prompt" id="uploadPrompt">
+          <label for="imgInput" class="upload-prompt" id="uploadPrompt">
             <div class="upload-icon">☁️</div>
             <div class="upload-text">上传图片开始编辑</div>
             <div class="upload-hint">支持 Cmd + V 快速粘贴、拖拽上传或点击上传</div>
-            <input type="file" id="imgInput" accept="image/*" multiple hidden />
-          </div>
+          </label>
+          
+          <!-- 隐藏的文件输入框 -->
+          <input type="file" id="imgInput" accept="image/*" multiple style="display: none;" />
         </div>
         
         <!-- 历史记录面板 -->

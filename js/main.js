@@ -52,12 +52,22 @@
         return;
       }
       
-      // 添加上传提示的点击事件
+      // 添加上传提示的点击事件（现在使用label，会自动触发）
       const uploadPrompt = document.getElementById('uploadPrompt');
       if (uploadPrompt) {
-        uploadPrompt.addEventListener('click', () => {
-          imgInput.click();
+        console.log('上传提示已设置为label，点击会自动触发文件选择');
+        
+        // 添加点击监听用于调试
+        uploadPrompt.addEventListener('click', (e) => {
+          console.log('✅ 点击上传提示（label自动触发文件选择）');
+          console.log('事件详情:', {
+            type: e.type,
+            target: e.target.tagName,
+            isTrusted: e.isTrusted
+          });
         });
+      } else {
+        console.error('❌ uploadPrompt 未找到');
       }
       
       ctx = canvas.getContext('2d');
@@ -76,6 +86,17 @@
       window.addEventListener('resize', handleWindowResize);
       
       console.log('初始化完成');
+      
+      // 添加调试信息
+      console.log('=== 初始化状态检查 ===');
+      console.log('dropZone:', !!dropZone);
+      console.log('imgInput:', !!imgInput);
+      console.log('canvas:', !!canvas);
+      console.log('uploadPrompt:', !!document.getElementById('uploadPrompt'));
+      console.log('=== 状态检查完成 ===');
+      
+      // 显示初始化成功提示
+      showToast('页面初始化完成，可以开始上传图片', 3000);
     }, 100);
   });
   
@@ -121,6 +142,56 @@
       console.log('imagesList:', imagesList);
       console.log('baseImage:', baseImage);
       console.log('=== 功能测试结束 ===');
+    };
+    
+    // 添加上传功能测试
+    window.testUpload = function() {
+      console.log('=== 上传功能测试 ===');
+      console.log('dropZone 元素:', dropZone);
+      console.log('imgInput 元素:', imgInput);
+      console.log('uploadPrompt 元素:', document.getElementById('uploadPrompt'));
+      
+      if (imgInput) {
+        try {
+          imgInput.click();
+          console.log('✅ 文件选择对话框已触发');
+          showToast('文件选择对话框已打开');
+        } catch (error) {
+          console.error('❌ 点击上传失败:', error);
+          showToast('点击上传失败: ' + error.message);
+        }
+      } else {
+        console.error('❌ imgInput 未找到');
+        showToast('imgInput 未找到');
+      }
+      console.log('=== 测试结束 ===');
+    };
+    
+    // 添加强制测试函数
+    window.forceTestUpload = function() {
+      console.log('=== 强制上传测试 ===');
+      const testInput = document.createElement('input');
+      testInput.type = 'file';
+      testInput.accept = 'image/*';
+      testInput.multiple = true;
+      testInput.style.display = 'none';
+      document.body.appendChild(testInput);
+      
+      try {
+        testInput.click();
+        console.log('✅ 强制测试文件选择对话框已触发');
+        showToast('强制测试成功');
+        
+        // 清理测试元素
+        setTimeout(() => {
+          document.body.removeChild(testInput);
+        }, 1000);
+      } catch (error) {
+        console.error('❌ 强制测试失败:', error);
+        showToast('强制测试失败: ' + error.message);
+        document.body.removeChild(testInput);
+      }
+      console.log('=== 强制测试结束 ===');
     };
     
     // 图片水印文件选择
@@ -301,80 +372,94 @@
       return;
     }
     
-    // 点击上传 - 简化版本
-    dropZone.onclick = function(e) {
-      e.preventDefault();
-      e.stopPropagation();
+    // 点击上传 - 简化版本（现在主要依赖label）
+    dropZone.addEventListener('click', function(e) {
       console.log('点击上传区域');
-      try {
-        imgInput.click();
-        console.log('文件选择对话框已触发');
-      } catch (error) {
-        console.error('点击上传失败:', error);
-        showToast('点击上传失败，请重试');
+      
+      // 检查是否点击的是上传提示区域（label）
+      const uploadPrompt = document.getElementById('uploadPrompt');
+      if (uploadPrompt && uploadPrompt.contains(e.target)) {
+        console.log('点击的是上传提示区域（label会自动处理）');
+        return;
       }
-    };
+      
+      // 如果点击的是其他区域，也尝试触发文件选择
+      console.log('点击的是预览区域其他部分，尝试触发文件选择');
+      try {
+        if (imgInput) {
+          imgInput.click();
+          console.log('✅ 通过预览区域触发文件选择');
+        } else {
+          console.error('❌ imgInput 未找到');
+          showToast('文件输入框未找到，请刷新页面重试');
+        }
+      } catch (error) {
+        console.error('❌ 点击上传失败:', error);
+        showToast('点击上传失败: ' + error.message);
+      }
+    });
     
-    // 拖拽事件 - 简化版本
-    dropZone.ondragover = function(e) {
+    // 拖拽事件 - 使用 addEventListener
+    dropZone.addEventListener('dragover', function(e) {
       e.preventDefault();
       e.stopPropagation();
       console.log('拖拽悬停');
       dropZone.classList.add('dragover');
-    };
+    });
     
-    dropZone.ondragenter = function(e) {
+    dropZone.addEventListener('dragenter', function(e) {
       e.preventDefault();
       e.stopPropagation();
       console.log('拖拽进入');
       dropZone.classList.add('dragover');
-    };
+    });
     
-    dropZone.ondragleave = function(e) {
+    dropZone.addEventListener('dragleave', function(e) {
       e.preventDefault();
       e.stopPropagation();
       console.log('拖拽离开');
       dropZone.classList.remove('dragover');
-    };
+    });
     
-    dropZone.ondrop = function(e) {
-     e.preventDefault();
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
       e.stopPropagation();
       console.log('拖拽放下');
       dropZone.classList.remove('dragover');
       
-     const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
       console.log('拖拽文件:', files);
       
-     if (files.length) {
-       imagesList.push(...files);
-       loadImage(files[0]);
-       showToast(`已添加 ${files.length} 张图片 ✅`);
+      if (files.length) {
+        imagesList.push(...files);
+        loadImage(files[0]);
+        showToast(`已添加 ${files.length} 张图片 ✅`);
       } else {
         showToast('请拖拽图片文件');
-     }
-    };
+      }
+    });
    
-    // 文件选择事件 - 简化版本
-    imgInput.onchange = function(e) {
+    // 文件选择事件 - 使用 addEventListener
+    imgInput.addEventListener('change', function(e) {
       console.log('文件选择变化');
-     const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
+      const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
       console.log('选择的文件:', files);
       
-     if (files.length) {
-       imagesList.push(...files);
-       loadImage(files[0]);
-       showToast(`已选择 ${files.length} 张图片 ✅`);
+      if (files.length) {
+        imagesList.push(...files);
+        loadImage(files[0]);
+        showToast(`已选择 ${files.length} 张图片 ✅`);
       } else {
         showToast('请选择图片文件');
       }
-    };
+    });
     
     console.log('上传事件初始化完成');
   }
    
   // 初始化粘贴功能
   function initPasteEvents() {
+    console.log('正在初始化粘贴功能...');
     document.onpaste = async function(e) {
       console.log('粘贴事件触发', e);
       e.preventDefault();
@@ -424,10 +509,32 @@
       }
       
       if (imgs.length > 0) {
-       imagesList.push(...imgs);
-       loadImage(imgs[0]);
-       showToast(`已粘贴 ${imgs.length} 张图片 ✅`);
-        console.log('成功处理粘贴的图片');
+       console.log('准备加载粘贴的图片:', imgs.length, '张');
+       
+       // 检查图片大小
+       const oversizedImages = imgs.filter(img => img.size > 5 * 1024 * 1024);
+       if (oversizedImages.length > 0) {
+         showToast(`检测到 ${oversizedImages.length} 张图片过大（>5MB），将跳过这些图片`, 5000);
+         imgs = imgs.filter(img => img.size <= 5 * 1024 * 1024);
+       }
+       
+       if (imgs.length > 0) {
+         imagesList.push(...imgs);
+         
+         // 延迟一点时间确保UI更新
+         setTimeout(() => {
+           try {
+             loadImage(imgs[0]);
+             showToast(`已粘贴 ${imgs.length} 张图片 ✅`);
+             console.log('成功处理粘贴的图片');
+           } catch (error) {
+             console.error('加载粘贴图片失败:', error);
+             showToast('图片加载失败，请重试', 3000);
+           }
+         }, 100);
+       } else {
+         showToast('没有可用的图片（所有图片都过大）', 3000);
+       }
       } else {
         console.log('没有找到图片数据');
         showToast('剪贴板中没有图片数据，请确保复制了图片');
@@ -435,6 +542,12 @@
     };
     
     console.log('粘贴功能初始化完成');
+    
+    // 添加测试函数
+    window.testPaste = function() {
+      console.log('粘贴事件监听器状态:', !!document.onpaste);
+      console.log('当前粘贴事件:', document.onpaste);
+    };
   }
    
    // 处理窗口大小变化
@@ -467,53 +580,192 @@
    
    // ========== 加载主图 ==========
    function loadImage(file) {
+     console.log('开始加载图片:', file.name, file.size, file.type);
+     
+     // 检查文件大小限制（10MB）
+     const maxSize = 10 * 1024 * 1024; // 10MB
+     if (file.size > maxSize) {
+       console.error('图片文件过大:', file.size, 'bytes');
+       showToast(`图片文件过大（${Math.round(file.size / 1024 / 1024)}MB），请选择小于10MB的图片`, 5000);
+       return;
+     }
+     
+     // 检查文件类型
+     if (!file.type.startsWith('image/')) {
+       console.error('不是图片文件:', file.type);
+       showToast('请选择图片文件', 3000);
+       return;
+     }
+     
      const reader = new FileReader();
+     
      reader.onload = e => {
-       const img = new Image();
-       img.onload = () => {
-        console.log('图片加载完成:', img.width, 'x', img.height);
-         baseImage = img;
-        
-        // 计算缩放比例，确保图片完全显示在固定容器中
-        const containerHeight = window.innerHeight * 0.7; // 70vh
-        const containerWidth = window.innerWidth;
-        const maxWidth = Math.min(1200, containerWidth * 0.9);
-        const maxHeight = Math.min(800, containerHeight * 0.9);
-        
-        const scaleX = maxWidth / img.width;
-        const scaleY = maxHeight / img.height;
-        const scale = Math.min(scaleX, scaleY, 1); // 不放大，只缩小
-        
-        const displayWidth = img.width * scale;
-        const displayHeight = img.height * scale;
-        
-        console.log('缩放比例:', scale, '显示尺寸:', displayWidth, 'x', displayHeight);
-        
-        // 设置画布为显示尺寸
-        canvas.width = displayWidth;
-        canvas.height = displayHeight;
-        
-        // 设置水印位置（相对于显示尺寸）
-        watermarkPos = { x: displayWidth * 0.75, y: displayHeight * 0.85 };
-        
-        // 切换到编辑模式
-        switchToEditMode();
-        
-        // 添加预览区域功能
-        addPreviewFeatures(file);
-        
-        // 添加到历史记录
-        addToHistory(file, e.target.result).then(() => {
-          // 设置当前历史记录索引为0（最新添加的）
-          currentHistoryIndex = 0;
-          updateHistoryDisplay();
-        });
-        
-         drawWatermark();
-       };
-       img.src = e.target.result;
+       console.log('FileReader 读取完成');
+       
+       // 对于所有图片都进行压缩处理，避免base64过长
+       console.log('开始压缩图片...', {
+         文件名: file.name,
+         文件大小: Math.round(file.size / 1024) + 'KB',
+         文件类型: file.type
+       });
+       
+       // 对于大文件，直接拒绝
+       if (file.size > 5 * 1024 * 1024) { // 5MB
+         console.log('文件过大，拒绝处理');
+         showToast('图片文件过大（>5MB），请使用更小的图片', 5000);
+         return;
+       }
+       
+       // 对于小文件，直接加载，不压缩
+       console.log('文件大小合适，直接加载');
+       loadImageFromDataUrl(e.target.result, file);
      };
+     
+     reader.onerror = (error) => {
+       console.error('文件读取失败:', error);
+       showToast('文件读取失败，请重试', 3000);
+     };
+     
      reader.readAsDataURL(file);
+   }
+   
+   // 从dataURL加载图片
+   function loadImageFromDataUrl(dataUrl, originalFile) {
+     const img = new Image();
+       
+     img.onload = () => {
+       console.log('图片加载完成:', img.width, 'x', img.height);
+       baseImage = img;
+        
+       // 计算缩放比例，确保图片完全显示在固定容器中
+       const containerHeight = window.innerHeight * 0.7; // 70vh
+       const containerWidth = window.innerWidth;
+       const maxWidth = Math.min(1200, containerWidth * 0.9);
+       const maxHeight = Math.min(800, containerHeight * 0.9);
+       
+       const scaleX = maxWidth / img.width;
+       const scaleY = maxHeight / img.height;
+       const scale = Math.min(scaleX, scaleY, 1); // 不放大，只缩小
+       
+       const displayWidth = img.width * scale;
+       const displayHeight = img.height * scale;
+       
+       console.log('缩放比例:', scale, '显示尺寸:', displayWidth, 'x', displayHeight);
+       
+       // 设置画布为显示尺寸
+       canvas.width = displayWidth;
+       canvas.height = displayHeight;
+       
+       // 设置水印位置（相对于显示尺寸）
+       watermarkPos = { x: displayWidth * 0.75, y: displayHeight * 0.85 };
+       
+       // 切换到编辑模式
+       switchToEditMode();
+       
+       // 添加预览区域功能
+       if (originalFile) {
+         addPreviewFeatures(originalFile);
+         
+         // 添加到历史记录
+         addToHistory(originalFile, dataUrl).then(() => {
+           // 设置当前历史记录索引为0（最新添加的）
+           currentHistoryIndex = 0;
+           updateHistoryDisplay();
+         });
+       }
+       
+       drawWatermark();
+     };
+     
+     img.onerror = (error) => {
+       console.error('图片加载失败:', error);
+       console.error('图片信息:', {
+         dataUrlLength: dataUrl.length,
+         originalFileSize: originalFile ? originalFile.size : 'unknown'
+       });
+       
+       // 检查是否是内存不足的问题
+       if (originalFile && originalFile.size > 20 * 1024 * 1024) { // 20MB
+         showToast('图片文件过大，可能导致内存不足。请尝试压缩图片后重试', 5000);
+       } else {
+         showToast('图片加载失败，可能是文件损坏或格式不支持', 3000);
+       }
+     };
+     
+     img.src = dataUrl;
+   }
+   
+   // 图片压缩功能
+   function compressImage(file, quality = 0.9) {
+     return new Promise((resolve) => {
+       console.log('压缩函数开始执行...');
+       
+       // 设置超时机制
+       const timeout = setTimeout(() => {
+         console.error('压缩超时');
+         resolve(null);
+       }, 10000); // 10秒超时
+       
+       const canvas = document.createElement('canvas');
+       const ctx = canvas.getContext('2d');
+       const img = new Image();
+       
+       img.onload = () => {
+         console.log('压缩图片加载完成:', img.width, 'x', img.height);
+         // 计算压缩后的尺寸 - 更激进的压缩
+         const maxWidth = 1200;
+         const maxHeight = 1200;
+         let { width, height } = img;
+         
+         if (width > maxWidth || height > maxHeight) {
+           const ratio = Math.min(maxWidth / width, maxHeight / height);
+           width *= ratio;
+           height *= ratio;
+           console.log('图片尺寸过大，缩放到:', width, 'x', height);
+         } else {
+           console.log('图片尺寸合适，无需缩放');
+         }
+         
+         canvas.width = width;
+         canvas.height = height;
+         console.log('设置canvas尺寸:', canvas.width, 'x', canvas.height);
+         
+         // 绘制压缩后的图片
+         ctx.drawImage(img, 0, 0, width, height);
+         console.log('图片绘制完成');
+         
+         // 转换为dataURL - 使用更高的质量
+         const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+         console.log('转换为dataURL完成');
+         
+         console.log('压缩完成:', {
+           原始大小: Math.round(file.size / 1024) + 'KB',
+           压缩后大小: Math.round(compressedDataUrl.length / 1024) + 'KB',
+           压缩比例: Math.round((1 - compressedDataUrl.length / file.size) * 100) + '%',
+           原始尺寸: img.width + 'x' + img.height,
+           压缩后尺寸: width + 'x' + height
+         });
+         
+         clearTimeout(timeout);
+         resolve(compressedDataUrl);
+       };
+       
+       img.onerror = (error) => {
+         console.error('压缩失败:', error);
+         resolve(null);
+       };
+       
+       // 使用FileReader而不是URL.createObjectURL
+       const reader = new FileReader();
+       reader.onload = (e) => {
+         img.src = e.target.result;
+       };
+       reader.onerror = () => {
+         console.error('FileReader读取失败');
+         resolve(null);
+       };
+       reader.readAsDataURL(file);
+     });
    }
    
   // 初始化水印功能
@@ -603,48 +855,83 @@
    
    // ========== 绘制水印 ==========
    function drawWatermark() {
-     if (!baseImage) return;
-     ctx.clearRect(0, 0, canvas.width, canvas.height);
-     ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
-   
-     const text = document.getElementById('watermarkText').value.trim();
-     const fontSize = parseInt(document.getElementById('fontSize').value, 10);
-     const fontColor = document.getElementById('fontColor').value;
-     const opacity = parseFloat(document.getElementById('opacity').value);
-     const rotate = parseFloat(document.getElementById('rotate').value);
-     const mode = document.getElementById('mode').value;
-     const tileGap = parseInt(document.getElementById('tileGap').value, 10);
-   
-     ctx.save();
-     ctx.globalAlpha = opacity;
-     ctx.translate(canvas.width / 2, canvas.height / 2);
-     ctx.rotate((rotate * Math.PI) / 180);
-     ctx.translate(-canvas.width / 2, -canvas.height / 2);
-   
-     if (mode === 'tile') {
-       for (let y = 0; y < canvas.height; y += tileGap)
-         for (let x = 0; x < canvas.width; x += tileGap)
-           drawMark(x, y);
-     } else {
-       drawMark(watermarkPos.x, watermarkPos.y);
+     if (!baseImage) {
+       console.log('drawWatermark: baseImage 不存在');
+       return;
      }
-   
-     ctx.restore();
-   
-     function drawMark(x, y) {
-       if (text) {
-         ctx.font = `${fontSize}px sans-serif`;
-         ctx.fillStyle = fontColor;
-         ctx.fillText(text, x, y);
+     
+     if (!ctx) {
+       console.error('drawWatermark: ctx 不存在');
+       return;
+     }
+     
+     try {
+       ctx.clearRect(0, 0, canvas.width, canvas.height);
+       ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+     
+       // 安全地获取DOM元素值
+       const watermarkTextEl = document.getElementById('watermarkText');
+       const fontSizeEl = document.getElementById('fontSize');
+       const fontColorEl = document.getElementById('fontColor');
+       const opacityEl = document.getElementById('opacity');
+       const rotateEl = document.getElementById('rotate');
+       const modeEl = document.getElementById('mode');
+       const tileGapEl = document.getElementById('tileGap');
+       
+       if (!watermarkTextEl || !fontSizeEl || !fontColorEl || !opacityEl || !rotateEl || !modeEl || !tileGapEl) {
+         console.error('drawWatermark: 某些DOM元素未找到', {
+           watermarkTextEl: !!watermarkTextEl,
+           fontSizeEl: !!fontSizeEl,
+           fontColorEl: !!fontColorEl,
+           opacityEl: !!opacityEl,
+           rotateEl: !!rotateEl,
+           modeEl: !!modeEl,
+           tileGapEl: !!tileGapEl
+         });
+         return;
        }
-      if (watermarkImage) {
-        // 使用fontSize控制logo大小，将px转换为百分比
-        const fontSize = parseFloat(document.getElementById('fontSize').value) || 24;
-        const logoSizePercent = (fontSize / 72) * 30; // 将12-72px映射到5-30%
-        const w = canvas.width * (logoSizePercent / 100);
-        const h = watermarkImage.height / watermarkImage.width * w;
-        ctx.drawImage(watermarkImage, x, y - h, w, h);
-      }
+       
+       const text = watermarkTextEl.value.trim();
+       const fontSize = parseInt(fontSizeEl.value, 10);
+       const fontColor = fontColorEl.value;
+       const opacity = parseFloat(opacityEl.value);
+       const rotate = parseFloat(rotateEl.value);
+       const mode = modeEl.value;
+       const tileGap = parseInt(tileGapEl.value, 10);
+   
+       ctx.save();
+       ctx.globalAlpha = opacity;
+       ctx.translate(canvas.width / 2, canvas.height / 2);
+       ctx.rotate((rotate * Math.PI) / 180);
+       ctx.translate(-canvas.width / 2, -canvas.height / 2);
+     
+       if (mode === 'tile') {
+         for (let y = 0; y < canvas.height; y += tileGap)
+           for (let x = 0; x < canvas.width; x += tileGap)
+             drawMark(x, y);
+       } else {
+         drawMark(watermarkPos.x, watermarkPos.y);
+       }
+     
+       ctx.restore();
+     
+       function drawMark(x, y) {
+         if (text) {
+           ctx.font = `${fontSize}px sans-serif`;
+           ctx.fillStyle = fontColor;
+           ctx.fillText(text, x, y);
+         }
+        if (watermarkImage) {
+          // 使用fontSize控制logo大小，将px转换为百分比
+          const logoSizePercent = (fontSize / 72) * 30; // 将12-72px映射到5-30%
+          const w = canvas.width * (logoSizePercent / 100);
+          const h = watermarkImage.height / watermarkImage.width * w;
+          ctx.drawImage(watermarkImage, x, y - h, w, h);
+        }
+       }
+     } catch (error) {
+       console.error('drawWatermark 绘制失败:', error);
+       showToast('图片绘制失败，请重试', 3000);
      }
    }
    
@@ -985,6 +1272,7 @@
     historyList.forEach((item, index) => {
       // 创建缩略图容器
       const thumbnailContainer = document.createElement('div');
+      thumbnailContainer.className = 'history-thumbnail-container';
       thumbnailContainer.style.position = 'relative';
       thumbnailContainer.style.display = 'inline-block';
       
@@ -1182,14 +1470,17 @@
     updateHistoryDisplay();
   };
   
-  // 调试删除按钮
-  window.testDeleteButtons = function() {
+  // 详细调试删除按钮
+  window.debugDeleteButtons = function() {
+    console.log('=== 详细删除按钮调试 ===');
+    
     const thumbnails = document.querySelectorAll('.history-thumbnail');
     const deleteButtons = document.querySelectorAll('.history-delete-btn');
+    const thumbnailContainers = Array.from(document.querySelectorAll('.history-thumbnail')).map(thumb => thumb.parentElement);
     
-    console.log('=== 删除按钮调试信息 ===');
     console.log('缩略图数量:', thumbnails.length);
     console.log('删除按钮数量:', deleteButtons.length);
+    console.log('缩略图容器数量:', thumbnailContainers.length);
     console.log('当前历史记录索引:', currentHistoryIndex);
     console.log('历史记录总数:', historyList.length);
     
@@ -1199,20 +1490,30 @@
       const deleteBtnStyle = deleteBtn ? window.getComputedStyle(deleteBtn) : null;
       
       console.log(`缩略图 ${index}:`, {
+        id: thumb.id || 'no-id',
         className: thumb.className,
         hasActive: thumb.classList.contains('active'),
         position: computedStyle.position,
         zIndex: computedStyle.zIndex,
+        width: computedStyle.width,
+        height: computedStyle.height,
         deleteButton: {
           exists: !!deleteBtn,
+          element: deleteBtn,
+          className: deleteBtn ? deleteBtn.className : 'N/A',
           opacity: deleteBtnStyle ? deleteBtnStyle.opacity : 'N/A',
           display: deleteBtnStyle ? deleteBtnStyle.display : 'N/A',
           visibility: deleteBtnStyle ? deleteBtnStyle.visibility : 'N/A',
           position: deleteBtnStyle ? deleteBtnStyle.position : 'N/A',
-          zIndex: deleteBtnStyle ? deleteBtnStyle.zIndex : 'N/A'
+          zIndex: deleteBtnStyle ? deleteBtnStyle.zIndex : 'N/A',
+          top: deleteBtnStyle ? deleteBtnStyle.top : 'N/A',
+          right: deleteBtnStyle ? deleteBtnStyle.right : 'N/A',
+          width: deleteBtnStyle ? deleteBtnStyle.width : 'N/A',
+          height: deleteBtnStyle ? deleteBtnStyle.height : 'N/A',
+          backgroundColor: deleteBtnStyle ? deleteBtnStyle.backgroundColor : 'N/A'
         }
       });
     });
     
-    console.log('=== 调试信息结束 ===');
+    console.log('=== 调试结束 ===');
   };
