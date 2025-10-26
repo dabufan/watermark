@@ -1090,13 +1090,117 @@
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
   
+  // 在指定画布上绘制水印
+  function drawWatermarkOnCanvas(ctx, canvasWidth, canvasHeight, scaleX = 1, scaleY = 1) {
+    // 获取当前的水印设置
+    const watermarkTextEl = document.getElementById('watermarkText');
+    const fontSizeEl = document.getElementById('fontSize');
+    const fontColorEl = document.getElementById('fontColor');
+    const opacityEl = document.getElementById('opacity');
+    const rotateEl = document.getElementById('rotate');
+    const modeEl = document.getElementById('mode');
+    const tileGapEl = document.getElementById('tileGap');
+    
+    if (!watermarkTextEl || !fontSizeEl || !fontColorEl || !opacityEl || !rotateEl || !modeEl || !tileGapEl) {
+      console.error('水印控件未找到');
+      return;
+    }
+    
+    const text = watermarkTextEl.value.trim();
+    const currentFontSize = parseInt(fontSizeEl.value);
+    const currentFontColor = fontColorEl.value;
+    const currentOpacity = parseFloat(opacityEl.value);
+    const currentRotate = parseInt(rotateEl.value);
+    const currentMode = modeEl.value;
+    const currentTileGap = parseInt(tileGapEl.value);
+    
+    if (!text && !watermarkImage) return;
+    
+    // 计算缩放后的水印位置和大小
+    const scaledWatermarkPos = {
+      x: watermarkPos.x * scaleX,
+      y: watermarkPos.y * scaleY
+    };
+    
+    const scaledFontSize = currentFontSize * scaleX;
+    const scaledOpacity = currentOpacity;
+    const scaledRotate = currentRotate;
+    
+    ctx.save();
+    ctx.globalAlpha = scaledOpacity;
+    
+    if (text) {
+      // 文字水印
+      ctx.font = `${scaledFontSize}px Arial, sans-serif`;
+      ctx.fillStyle = currentFontColor;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      // 旋转
+      if (scaledRotate !== 0) {
+        ctx.translate(scaledWatermarkPos.x, scaledWatermarkPos.y);
+        ctx.rotate((scaledRotate * Math.PI) / 180);
+        ctx.translate(-scaledWatermarkPos.x, -scaledWatermarkPos.y);
+      }
+      
+      if (currentMode === 'tile') {
+        // 平铺模式
+        const tileGapScaled = currentTileGap * scaleX;
+        for (let y = 0; y < canvasHeight; y += tileGapScaled) {
+          for (let x = 0; x < canvasWidth; x += tileGapScaled) {
+            ctx.fillText(text, x, y);
+          }
+        }
+      } else {
+        // 单个水印
+        ctx.fillText(text, scaledWatermarkPos.x, scaledWatermarkPos.y);
+      }
+    } else if (watermarkImage) {
+      // 图片水印
+      const logoSizeScaled = Math.min(scaledFontSize * 2, canvasWidth * 0.1, canvasHeight * 0.1);
+      
+      if (currentMode === 'tile') {
+        // 平铺模式
+        const tileGapScaled = currentTileGap * scaleX;
+        for (let y = 0; y < canvasHeight; y += tileGapScaled) {
+          for (let x = 0; x < canvasWidth; x += tileGapScaled) {
+            ctx.drawImage(watermarkImage, x - logoSizeScaled/2, y - logoSizeScaled/2, logoSizeScaled, logoSizeScaled);
+          }
+        }
+      } else {
+        // 单个水印
+        ctx.drawImage(watermarkImage, scaledWatermarkPos.x - logoSizeScaled/2, scaledWatermarkPos.y - logoSizeScaled/2, logoSizeScaled, logoSizeScaled);
+      }
+    }
+    
+    ctx.restore();
+  }
+
   // 下载当前图片
   function downloadCurrentImage() {
     if (!baseImage) return;
     
+    // 创建临时画布，使用原始图片尺寸
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    // 设置临时画布为原始图片尺寸
+    tempCanvas.width = baseImage.width;
+    tempCanvas.height = baseImage.height;
+    
+    // 绘制原始图片
+    tempCtx.drawImage(baseImage, 0, 0);
+    
+    // 计算水印在原始尺寸下的位置和大小
+    const scaleX = baseImage.width / canvas.width;
+    const scaleY = baseImage.height / canvas.height;
+    
+    // 绘制水印
+    drawWatermarkOnCanvas(tempCtx, tempCanvas.width, tempCanvas.height, scaleX, scaleY);
+    
     const link = document.createElement('a');
     link.download = `watermarked-${Date.now()}.png`;
-    link.href = canvas.toDataURL('image/png', 1);
+    link.href = tempCanvas.toDataURL('image/png', 1);
     link.click();
     
     showToast('图片已下载 ✅');
@@ -1110,9 +1214,27 @@
     }
     
     try {
-      // 将canvas转换为blob
+      // 创建临时画布，使用原始图片尺寸
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      // 设置临时画布为原始图片尺寸
+      tempCanvas.width = baseImage.width;
+      tempCanvas.height = baseImage.height;
+      
+      // 绘制原始图片
+      tempCtx.drawImage(baseImage, 0, 0);
+      
+      // 计算水印在原始尺寸下的位置和大小
+      const scaleX = baseImage.width / canvas.width;
+      const scaleY = baseImage.height / canvas.height;
+      
+      // 绘制水印
+      drawWatermarkOnCanvas(tempCtx, tempCanvas.width, tempCanvas.height, scaleX, scaleY);
+      
+      // 将临时画布转换为blob
       const blob = await new Promise(resolve => {
-        canvas.toBlob(resolve, 'image/png', 1);
+        tempCanvas.toBlob(resolve, 'image/png', 1);
       });
       
       // 复制到剪切板
