@@ -1476,7 +1476,7 @@ body.dark .footer {
   /* 水印输入区域 - 紧凑布局 */
   .watermark-control-row {
     display: grid;
-    grid-template-columns: 40px 1fr auto;
+    grid-template-columns: 40px 1fr auto auto;
     gap: 6px;
     align-items: center;
   }
@@ -1718,7 +1718,7 @@ body.dark .footer {
   
   /* 超小屏幕水印输入区域 */
   .watermark-control-row {
-    grid-template-columns: 36px 1fr auto;
+    grid-template-columns: 36px 1fr auto auto;
     gap: 4px;
   }
   
