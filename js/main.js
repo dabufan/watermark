@@ -1242,8 +1242,6 @@
     ctx.globalAlpha = websiteOpacity;
     ctx.font = `${websiteFontSize * scaleX}px Arial, sans-serif`;
     ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 1;
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
     
@@ -1252,9 +1250,7 @@
     const x = canvasWidth - padding;
     const y = canvasHeight - padding;
     
-    // 绘制文字描边（黑色边框）
-    ctx.strokeText(websiteText, x, y);
-    // 绘制文字填充（白色）
+    // 绘制文字填充（白色，无描边）
     ctx.fillText(websiteText, x, y);
     
     ctx.restore();
