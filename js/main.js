@@ -594,12 +594,16 @@
       const displayWidth = baseImage.width * scale;
       const displayHeight = baseImage.height * scale;
       
-      // 重新设置画布尺寸
-      canvas.width = displayWidth;
-      canvas.height = displayHeight;
+      // 重新设置画布尺寸为原始尺寸
+      canvas.width = baseImage.width;
+      canvas.height = baseImage.height;
       
-      // 重新设置水印位置
-      watermarkPos = { x: displayWidth * 0.75, y: displayHeight * 0.85 };
+      // 通过CSS设置显示尺寸
+      canvas.style.width = displayWidth + 'px';
+      canvas.style.height = displayHeight + 'px';
+      
+      // 重新设置水印位置（相对于原始尺寸）
+      watermarkPos = { x: baseImage.width * 0.75, y: baseImage.height * 0.85 };
       
       // 重新绘制
       drawWatermark();
@@ -680,12 +684,21 @@
        
        console.log('缩放比例:', scale, '显示尺寸:', displayWidth, 'x', displayHeight);
        
-       // 设置画布为显示尺寸
-       canvas.width = displayWidth;
-       canvas.height = displayHeight;
-       
-       // 设置水印位置（相对于显示尺寸）
-       watermarkPos = { x: displayWidth * 0.75, y: displayHeight * 0.85 };
+      // 设置画布为原始图片尺寸（保持高质量）
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      // 通过CSS设置显示尺寸
+      canvas.style.width = displayWidth + 'px';
+      canvas.style.height = displayHeight + 'px';
+      
+      // 设置水印位置（相对于原始尺寸）
+      watermarkPos = { x: img.width * 0.75, y: img.height * 0.85 };
+      
+      // 启用高质量图像渲染
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
        
        // 切换到编辑模式
        switchToEditMode();
@@ -909,9 +922,10 @@
        return;
      }
      
-     try {
-       ctx.clearRect(0, 0, canvas.width, canvas.height);
-       ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+    try {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // 使用原始尺寸绘制图片，保持高质量
+      ctx.drawImage(baseImage, 0, 0);
      
        // 安全地获取DOM元素值
        const watermarkTextEl = document.getElementById('watermarkText');
@@ -1533,22 +1547,21 @@
       const displayWidth = img.width * scale;
       const displayHeight = img.height * scale;
       
-      // 设置画布为显示尺寸
-      canvas.width = displayWidth;
-      canvas.height = displayHeight;
+      // 设置画布为原始尺寸（保持高质量）
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      // 通过CSS设置显示尺寸
+      canvas.style.width = displayWidth + 'px';
+      canvas.style.height = displayHeight + 'px';
       
       // 恢复保存的水印位置，如果没有则使用默认位置
       if (item.watermarkPos) {
-        // 按比例调整水印位置
-        const scaleX = displayWidth / item.displayWidth;
-        const scaleY = displayHeight / item.displayHeight;
-        watermarkPos = {
-          x: item.watermarkPos.x * scaleX,
-          y: item.watermarkPos.y * scaleY
-        };
+        // 直接使用保存的原始位置
+        watermarkPos = { ...item.watermarkPos };
       } else {
-        // 使用默认位置
-        watermarkPos = { x: displayWidth * 0.75, y: displayHeight * 0.85 };
+        // 使用默认位置（相对于原始尺寸）
+        watermarkPos = { x: img.width * 0.75, y: img.height * 0.85 };
       }
       
       // 切换到编辑模式
