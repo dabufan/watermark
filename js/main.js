@@ -14,8 +14,9 @@
    let baseImage = null;
    let watermarkImage = null;
    let imagesList = [];
-   let watermarkPos = { x: 50, y: 50 };
-   const CONCURRENCY = 3; // 默认并行数量
+  let watermarkPos = { x: 50, y: 50 };
+  let tileOffset = { x: 0, y: 0 }; // 平铺模式的偏移量
+  const CONCURRENCY = 3; // 默认并行数量
   
   // 历史记录相关变量
   let historyList = [];
@@ -869,22 +870,52 @@
        e.preventDefault();
        e.stopPropagation();
        dragging = true;
-       dragOffset.x = x - watermarkPos.x;
-       dragOffset.y = y - watermarkPos.y;
+       
+       // 获取当前模式
+       const modeEl = document.getElementById('mode');
+       const mode = modeEl ? modeEl.value : 'single';
+       
+       if (mode === 'tile') {
+         // 平铺模式：使用平铺偏移量
+         dragOffset.x = x - tileOffset.x;
+         dragOffset.y = y - tileOffset.y;
+       } else {
+         // 单个水印模式：使用水印位置
+         dragOffset.x = x - watermarkPos.x;
+         dragOffset.y = y - watermarkPos.y;
+       }
      }
    }
    function onDrag(e) {
      if (!dragging) return;
      e.preventDefault();
      const pos = getPointer(e);
-     watermarkPos.x = pos.x - dragOffset.x;
-     watermarkPos.y = pos.y - dragOffset.y;
      
-     // 实时更新当前历史记录中的水印位置
-     if (currentHistoryIndex >= 0 && historyList[currentHistoryIndex]) {
-       historyList[currentHistoryIndex].watermarkPos = { ...watermarkPos };
-       historyList[currentHistoryIndex].displayWidth = canvas.width;
-       historyList[currentHistoryIndex].displayHeight = canvas.height;
+     // 获取当前模式
+     const modeEl = document.getElementById('mode');
+     const mode = modeEl ? modeEl.value : 'single';
+     
+     if (mode === 'tile') {
+       // 平铺模式：调整平铺偏移量
+       tileOffset.x = pos.x - dragOffset.x;
+       tileOffset.y = pos.y - dragOffset.y;
+       
+       // 限制偏移量范围，避免平铺超出画布
+       const tileGapEl = document.getElementById('tileGap');
+       const tileGap = tileGapEl ? parseInt(tileGapEl.value, 10) : 100;
+       tileOffset.x = Math.max(-tileGap, Math.min(tileGap, tileOffset.x));
+       tileOffset.y = Math.max(-tileGap, Math.min(tileGap, tileOffset.y));
+     } else {
+       // 单个水印模式：调整水印位置
+       watermarkPos.x = pos.x - dragOffset.x;
+       watermarkPos.y = pos.y - dragOffset.y;
+       
+       // 实时更新当前历史记录中的水印位置
+       if (currentHistoryIndex >= 0 && historyList[currentHistoryIndex]) {
+         historyList[currentHistoryIndex].watermarkPos = { ...watermarkPos };
+         historyList[currentHistoryIndex].displayWidth = canvas.width;
+         historyList[currentHistoryIndex].displayHeight = canvas.height;
+       }
      }
      
      drawWatermark();
@@ -908,6 +939,8 @@
     // 获取当前水印设置
     const watermarkTextEl = document.getElementById('watermarkText');
     const fontSizeEl = document.getElementById('fontSize');
+    const modeEl = document.getElementById('mode');
+    const tileGapEl = document.getElementById('tileGap');
     
     if (!watermarkTextEl || !fontSizeEl) {
       // 如果无法获取设置，使用默认检测区域
@@ -918,26 +951,59 @@
     
     const text = watermarkTextEl.value.trim();
     const fontSize = parseInt(fontSizeEl.value, 10);
+    const mode = modeEl ? modeEl.value : 'single';
+    const tileGap = tileGapEl ? parseInt(tileGapEl.value, 10) : 100;
     
     if (text) {
-      // 文字水印：使用字体大小作为检测区域
+      // 文字水印检测
       const detectionSize = Math.max(fontSize * 2, 100); // 至少100px
-      return x > watermarkPos.x - detectionSize/2 && x < watermarkPos.x + detectionSize/2 &&
-             y > watermarkPos.y - detectionSize/2 && y < watermarkPos.y + detectionSize/2;
+      
+      if (mode === 'tile') {
+        // 平铺模式：检测是否在任何水印的范围内
+        for (let tileY = 0; tileY < canvas.height; tileY += tileGap) {
+          for (let tileX = 0; tileX < canvas.width; tileX += tileGap) {
+            if (x > tileX - detectionSize/2 && x < tileX + detectionSize/2 &&
+                y > tileY - detectionSize/2 && y < tileY + detectionSize/2) {
+              return true;
+            }
+          }
+        }
+        return false;
+      } else {
+        // 单个水印模式
+        return x > watermarkPos.x - detectionSize/2 && x < watermarkPos.x + detectionSize/2 &&
+               y > watermarkPos.y - detectionSize/2 && y < watermarkPos.y + detectionSize/2;
+      }
     } else if (watermarkImage) {
-      // 图片水印：根据字体大小计算实际LOGO大小和位置
+      // 图片水印检测
       const logoSizePercent = (fontSize / 72) * 30;
       const logoWidth = canvas.width * (logoSizePercent / 100);
       const logoHeight = watermarkImage.height / watermarkImage.width * logoWidth;
       
-      // LOGO实际绘制位置：左上角在 (watermarkPos.x, watermarkPos.y - logoHeight)
-      const logoLeft = watermarkPos.x;
-      const logoTop = watermarkPos.y - logoHeight;
-      const logoRight = logoLeft + logoWidth;
-      const logoBottom = watermarkPos.y;
-      
-      // 检测是否在LOGO区域内
-      return x >= logoLeft && x <= logoRight && y >= logoTop && y <= logoBottom;
+      if (mode === 'tile') {
+        // 平铺模式：检测是否在任何LOGO的范围内
+        for (let tileY = 0; tileY < canvas.height; tileY += tileGap) {
+          for (let tileX = 0; tileX < canvas.width; tileX += tileGap) {
+            const logoLeft = tileX - logoWidth/2;
+            const logoTop = tileY - logoHeight/2;
+            const logoRight = tileX + logoWidth/2;
+            const logoBottom = tileY + logoHeight/2;
+            
+            if (x >= logoLeft && x <= logoRight && y >= logoTop && y <= logoBottom) {
+              return true;
+            }
+          }
+        }
+        return false;
+      } else {
+        // 单个LOGO模式
+        const logoLeft = watermarkPos.x - logoWidth/2;
+        const logoTop = watermarkPos.y - logoHeight/2;
+        const logoRight = watermarkPos.x + logoWidth/2;
+        const logoBottom = watermarkPos.y + logoHeight/2;
+        
+        return x >= logoLeft && x <= logoRight && y >= logoTop && y <= logoBottom;
+      }
     }
     
     // 默认检测区域
@@ -1000,8 +1066,8 @@
        ctx.translate(-canvas.width / 2, -canvas.height / 2);
      
        if (mode === 'tile') {
-         for (let y = 0; y < canvas.height; y += tileGap)
-           for (let x = 0; x < canvas.width; x += tileGap)
+         for (let y = tileOffset.y; y < canvas.height; y += tileGap)
+           for (let x = tileOffset.x; x < canvas.width; x += tileGap)
              drawMark(x, y);
        } else {
          drawMark(watermarkPos.x, watermarkPos.y);
@@ -1201,8 +1267,12 @@
       if (currentMode === 'tile') {
         // 平铺模式
         const tileGapScaled = currentTileGap * scaleX;
-        for (let y = 0; y < canvasHeight; y += tileGapScaled) {
-          for (let x = 0; x < canvasWidth; x += tileGapScaled) {
+        const scaledTileOffset = {
+          x: tileOffset.x * scaleX,
+          y: tileOffset.y * scaleY
+        };
+        for (let y = scaledTileOffset.y; y < canvasHeight; y += tileGapScaled) {
+          for (let x = scaledTileOffset.x; x < canvasWidth; x += tileGapScaled) {
             ctx.fillText(text, x, y);
           }
         }
@@ -1217,8 +1287,12 @@
       if (currentMode === 'tile') {
         // 平铺模式
         const tileGapScaled = currentTileGap * scaleX;
-        for (let y = 0; y < canvasHeight; y += tileGapScaled) {
-          for (let x = 0; x < canvasWidth; x += tileGapScaled) {
+        const scaledTileOffset = {
+          x: tileOffset.x * scaleX,
+          y: tileOffset.y * scaleY
+        };
+        for (let y = scaledTileOffset.y; y < canvasHeight; y += tileGapScaled) {
+          for (let x = scaledTileOffset.x; x < canvasWidth; x += tileGapScaled) {
             ctx.drawImage(watermarkImage, x - logoSizeScaled/2, y - logoSizeScaled/2, logoSizeScaled, logoSizeScaled);
           }
         }
