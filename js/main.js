@@ -904,11 +904,39 @@
       y: (e.clientY - rect.top) * (canvas.height / rect.height)
      };
    }
-   function isInWatermark(x, y) {
-     const size = 200;
-     return x > watermarkPos.x - size/2 && x < watermarkPos.x + size/2 &&
-            y > watermarkPos.y - size/2 && y < watermarkPos.y + size/2;
-   }
+  function isInWatermark(x, y) {
+    // 获取当前水印设置
+    const watermarkTextEl = document.getElementById('watermarkText');
+    const fontSizeEl = document.getElementById('fontSize');
+    
+    if (!watermarkTextEl || !fontSizeEl) {
+      // 如果无法获取设置，使用默认检测区域
+      const size = 200;
+      return x > watermarkPos.x - size/2 && x < watermarkPos.x + size/2 &&
+             y > watermarkPos.y - size/2 && y < watermarkPos.y + size/2;
+    }
+    
+    const text = watermarkTextEl.value.trim();
+    const fontSize = parseInt(fontSizeEl.value, 10);
+    
+    // 计算检测区域大小
+    let detectionSize = 200; // 默认检测区域
+    
+    if (text) {
+      // 文字水印：使用字体大小作为检测区域
+      detectionSize = Math.max(fontSize * 2, 100); // 至少100px
+    } else if (watermarkImage) {
+      // 图片水印：根据字体大小计算实际LOGO大小
+      const logoSizePercent = (fontSize / 72) * 30;
+      const logoWidth = canvas.width * (logoSizePercent / 100);
+      const logoHeight = watermarkImage.height / watermarkImage.width * logoWidth;
+      detectionSize = Math.max(logoWidth, logoHeight, 100); // 至少100px
+    }
+    
+    // 检测是否在检测区域内
+    return x > watermarkPos.x - detectionSize/2 && x < watermarkPos.x + detectionSize/2 &&
+           y > watermarkPos.y - detectionSize/2 && y < watermarkPos.y + detectionSize/2;
+  }
    
    // ========== 绘制水印 ==========
    function drawWatermark() {
