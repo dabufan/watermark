@@ -28,6 +28,19 @@
   let currentLanguage = 'zh'; // 默认中文
   let languageToggle, languageIcon;
   
+  // 检测系统语言
+  function detectSystemLanguage() {
+    const systemLang = navigator.language || navigator.userLanguage;
+    console.log('系统语言:', systemLang);
+    
+    // 如果系统语言是英文或英文变体，则使用英文
+    if (systemLang.startsWith('en')) {
+      return 'en';
+    }
+    // 其他情况默认使用中文
+    return 'zh';
+  }
+  
   // 语言切换功能
   function initLanguageToggle() {
     // 延迟获取DOM元素，确保元素已渲染
@@ -36,18 +49,27 @@
       languageIcon = document.getElementById('languageIcon');
       
       if (languageToggle) {
+        // 首先检查本地存储
+        const savedLanguage = localStorage.getItem('language');
+        if (savedLanguage) {
+          currentLanguage = savedLanguage;
+          console.log('使用保存的语言设置:', currentLanguage);
+        } else {
+          // 如果没有保存的设置，则使用系统语言
+          currentLanguage = detectSystemLanguage();
+          console.log('使用系统语言:', currentLanguage);
+          // 保存系统语言设置
+          localStorage.setItem('language', currentLanguage);
+        }
+        
+        // 应用语言设置
+        updateLanguage();
+        
         languageToggle.addEventListener('click', () => {
           currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
           updateLanguage();
           localStorage.setItem('language', currentLanguage);
         });
-        
-        // 从本地存储加载语言设置
-        const savedLanguage = localStorage.getItem('language');
-        if (savedLanguage) {
-          currentLanguage = savedLanguage;
-          updateLanguage();
-        }
       }
     }, 100);
   }
