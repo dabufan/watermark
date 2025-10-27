@@ -6,15 +6,15 @@
 
   <!-- 首页 -->
   <url>
-    <loc>https://aishuiyin.vercel.app/</loc>
+    <loc>https://aishuiyin.babydu.cn/</loc>
     <lastmod>2025-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="zh-cn" href="https://aishuiyin.vercel.app/" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://aishuiyin.vercel.app/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://aishuiyin.vercel.app/" />
+    <xhtml:link rel="alternate" hreflang="zh-cn" href="https://aishuiyin.babydu.cn/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://aishuiyin.babydu.cn/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://aishuiyin.babydu.cn/" />
     <image:image>
-      <image:loc>https://aishuiyin.vercel.app/og-image.png</image:loc>
+      <image:loc>https://aishuiyin.babydu.cn/og-image.png</image:loc>
       <image:caption>AI 水印工具 - 在线图片加水印，支持文字水印、图片水印、透明度调整</image:caption>
       <image:title>AI 水印工具 - 智能图片加水印</image:title>
     </image:image>
@@ -22,7 +22,7 @@
 
   <!-- 示例页 -->
   <url>
-    <loc>https://aishuiyin.vercel.app/test.html</loc>
+    <loc>https://aishuiyin.babydu.cn/test.html</loc>
     <lastmod>2025-10-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
