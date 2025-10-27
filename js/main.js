@@ -607,16 +607,16 @@
   }
    
    // ========== 加载主图 ==========
-   function loadImage(file) {
-     console.log('开始加载图片:', file.name, file.size, file.type);
-     
-     // 检查文件大小限制（10MB）
-     const maxSize = 10 * 1024 * 1024; // 10MB
-     if (file.size > maxSize) {
-       console.error('图片文件过大:', file.size, 'bytes');
-       showToast(`图片文件过大（${Math.round(file.size / 1024 / 1024)}MB），请选择小于10MB的图片`, 5000);
-       return;
-     }
+  function loadImage(file) {
+    console.log('开始加载图片:', file.name, file.size, file.type);
+    
+    // 检查文件大小限制（20MB）
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    if (file.size > maxSize) {
+      console.error('图片文件过大:', file.size, 'bytes');
+      showToast(`图片文件过大（${Math.round(file.size / 1024 / 1024)}MB），请选择小于20MB的图片`, 5000);
+      return;
+    }
      
      // 检查文件类型
      if (!file.type.startsWith('image/')) {
