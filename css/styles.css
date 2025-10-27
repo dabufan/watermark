@@ -105,6 +105,55 @@ body.dark .logo-sub {
   color: #cbd5e1;
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.language-toggle {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.language-toggle:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.language-toggle:active {
+  transform: scale(0.95);
+}
+
+#languageIcon {
+  font-size: 16px;
+  transition: transform 0.2s ease;
+}
+
+.language-toggle:hover #languageIcon {
+  transform: rotate(15deg);
+}
+
+body.dark .language-toggle {
+  background: #334155;
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+body.dark .language-toggle:hover {
+  background: #475569;
+  border-color: #64748b;
+}
+
 .theme-toggle {
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
@@ -1473,6 +1522,11 @@ body.dark .footer-link:hover {
     font-size: 12px;
   }
   
+  .language-toggle {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
   .theme-toggle {
     padding: 6px 10px;
     font-size: 12px;
@@ -1536,6 +1590,12 @@ body.dark .footer-link:hover {
   .logo-sub {
     font-size: 11px;
     display: none; /* 在小屏幕上隐藏副标题 */
+  }
+  
+  .language-toggle {
+    padding: 6px 8px;
+    font-size: 12px;
+    min-width: 40px;
   }
   
   .theme-toggle {

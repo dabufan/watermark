@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>AI 水印工具 - 在线为图片添加智能水印 | aishuiyin.vercel.app</title>
+  <title data-zh="AI 水印工具 - 在线为图片添加智能水印 | aishuiyin.vercel.app" data-en="AI Watermark Tool - Add Smart Watermarks to Images Online | aishuiyin.vercel.app">AI 水印工具 - 在线为图片添加智能水印 | aishuiyin.vercel.app</title>
   <meta name="description" content="AI 水印工具是一款免费在线图片加水印工具，支持文字水印、图片水印、透明度调整、位置自定义，一键生成高质量带水印图片。无需下载，立即使用。">
   <meta name="keywords" content="AI水印, 在线水印, 图片加水印, watermark tool, 在线图片编辑, 免费图片加水印, 水印生成器, aishuiyin, vercel app">
 
@@ -39,13 +39,18 @@
     <div class="header-content">
       <div class="logo">
         <div class="logo-text">
-          <span class="logo-main">加水印</span>
-          <span class="logo-sub">-试试重复拖拽和粘贴图片</span>
+          <span class="logo-main" data-zh="加水印" data-en="Watermark">加水印</span>
+          <span class="logo-sub" data-zh="-试试重复拖拽和粘贴图片" data-en="-Try dragging and pasting images repeatedly">-试试重复拖拽和粘贴图片</span>
         </div>
       </div>
-      <button class="theme-toggle" id="themeToggle">
-        <span id="themeIcon">☽</span>
-      </button>
+      <div class="header-controls">
+        <button class="language-toggle" id="languageToggle">
+          <span id="languageIcon">🌐</span>
+        </button>
+        <button class="theme-toggle" id="themeToggle">
+          <span id="themeIcon">☽</span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -63,8 +68,8 @@
           <!-- 无图片时的上传提示 -->
           <label for="imgInput" class="upload-prompt" id="uploadPrompt">
             <div class="upload-icon">☁️</div>
-            <div class="upload-text">上传图片开始加水印</div>
-            <div class="upload-hint">支持 Cmd + V 快速粘贴、拖拽上传或点击上传</div>
+            <div class="upload-text" data-zh="上传图片开始加水印" data-en="Upload image to add watermark">上传图片开始加水印</div>
+            <div class="upload-hint" data-zh="支持 Cmd + V 快速粘贴、拖拽上传或点击上传" data-en="Support Cmd + V paste, drag & drop or click to upload">支持 Cmd + V 快速粘贴、拖拽上传或点击上传</div>
           </label>
           
           <!-- 隐藏的文件输入框 -->
@@ -89,12 +94,12 @@
                 <input type="color" id="fontColor" class="color-picker" value="#ff0000">
               </div>
               
-              <input type="text" id="watermarkText" class="watermark-input" placeholder="输入水印文字" value="水印">
+              <input type="text" id="watermarkText" class="watermark-input" data-placeholder-zh="输入水印文字" data-placeholder-en="Enter watermark text" placeholder="输入水印文字" value="水印">
               
-              <span class="input-separator">或</span>
+              <span class="input-separator" data-zh="或" data-en="or">或</span>
               
               <button class="btn-upload-logo" id="uploadLogoBtn">
-                <span class="btn-text">上传LOGO</span>
+                <span class="btn-text" data-zh="上传LOGO" data-en="Upload LOGO">上传LOGO</span>
               </button>
             </div>
           </div>
@@ -102,7 +107,7 @@
           <!-- 水印属性调节 -->
           <div class="watermark-properties">
             <div class="property-group">
-              <label class="property-label">透明度</label>
+              <label class="property-label" data-zh="透明度" data-en="Opacity">透明度</label>
               <div class="slider-wrapper">
                 <input type="range" id="opacity" class="property-slider" min="0" max="1" step="0.05" value="0.5">
                 <span class="slider-value" id="opacityValue">50%</span>
@@ -110,7 +115,7 @@
             </div>
 
             <div class="property-group">
-              <label class="property-label">平铺</label>
+              <label class="property-label" data-zh="平铺" data-en="Tile">平铺</label>
               <div class="toggle-wrapper">
                 <input type="checkbox" id="tileMode" class="toggle-switch">
                 <label for="tileMode" class="toggle-label"></label>
@@ -118,7 +123,7 @@
             </div>
 
             <div class="property-group">
-              <label class="property-label">疏密</label>
+              <label class="property-label" data-zh="疏密" data-en="Density">疏密</label>
               <div class="slider-wrapper">
                 <input type="range" id="tileGap" class="property-slider" min="50" max="500" step="10" value="150">
                 <span class="slider-value" id="densityValue">150</span>
@@ -126,7 +131,7 @@
             </div>
 
             <div class="property-group">
-              <label class="property-label">大小</label>
+              <label class="property-label" data-zh="大小" data-en="Size">大小</label>
               <div class="slider-wrapper">
                 <input type="range" id="fontSize" class="property-slider" min="12" max="150" step="2" value="50">
                 <span class="slider-value" id="sizeValue">50px</span>
@@ -134,7 +139,7 @@
             </div>
 
             <div class="property-group">
-              <label class="property-label">旋转</label>
+              <label class="property-label" data-zh="旋转" data-en="Rotation">旋转</label>
               <div class="rotation-wrapper">
                 <input type="number" id="rotate" class="rotation-input" value="0" min="-180" max="180">
                 <span class="rotation-unit">°</span>
@@ -145,10 +150,10 @@
           <!-- 操作按钮 -->
           <div class="action-buttons">
             <button class="btn-download" id="downloadBtn">
-              <span class="btn-text">下载图片</span>
+              <span class="btn-text" data-zh="下载图片" data-en="Download Image">下载图片</span>
             </button>
             <button class="btn-copy" id="copyBtn">
-              <span class="btn-text">复制图片</span>
+              <span class="btn-text" data-zh="复制图片" data-en="Copy Image">复制图片</span>
             </button>
           </div>
         </div>
@@ -174,9 +179,9 @@
   <!-- 页脚 -->
   <footer class="footer">
     <div class="footer-content">
-      <p class="footer-text">@ 2025 Xinq lee | 本地运行-无数据上传</p>
+      <p class="footer-text" data-zh="@ 2025 Xinq lee | 本地运行-无数据上传" data-en="@ 2025 Xinq lee | Local Run - No Data Upload">@ 2025 Xinq lee | 本地运行-无数据上传</p>
       <div class="footer-links">
-        <span class="links-label">友情链接：</span>
+        <span class="links-label" data-zh="友情链接：" data-en="Links:">友情链接：</span>
         <a href="https://ecopy.babydu.cn/" target="_blank" class="footer-link">Ecopy</a>
         <a href="https://enote.babydu.cn/" target="_blank" class="footer-link">Enote</a>
         <a href="https://etranslate.babydu.cn/" target="_blank" class="footer-link">Etranslate</a>

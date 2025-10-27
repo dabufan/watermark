@@ -3,6 +3,7 @@
    - 上传、粘贴、绘制水印
    - 并行处理与导出
    - 生成 manifest.txt
+   - 双语支持
    ====================================================== */
 
    import { showToast, updateProgress, resetProgress, playDing } from './ui.js';
@@ -22,6 +23,79 @@
   let historyList = [];
   let currentHistoryIndex = -1;
   const maxHistoryItems = 20;
+  
+  // 语言相关变量
+  let currentLanguage = 'zh'; // 默认中文
+  let languageToggle, languageIcon;
+  
+  // 语言切换功能
+  function initLanguageToggle() {
+    // 延迟获取DOM元素，确保元素已渲染
+    setTimeout(() => {
+      languageToggle = document.getElementById('languageToggle');
+      languageIcon = document.getElementById('languageIcon');
+      
+      if (languageToggle) {
+        languageToggle.addEventListener('click', () => {
+          currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
+          updateLanguage();
+          localStorage.setItem('language', currentLanguage);
+        });
+        
+        // 从本地存储加载语言设置
+        const savedLanguage = localStorage.getItem('language');
+        if (savedLanguage) {
+          currentLanguage = savedLanguage;
+          updateLanguage();
+        }
+      }
+    }, 100);
+  }
+  
+  function updateLanguage() {
+    // 更新页面标题
+    const title = document.querySelector('title');
+    if (title) {
+      title.textContent = title.getAttribute(`data-${currentLanguage}`);
+    }
+    
+    // 更新所有带有data-zh和data-en属性的元素
+    const elements = document.querySelectorAll('[data-zh][data-en]');
+    elements.forEach(element => {
+      const text = element.getAttribute(`data-${currentLanguage}`);
+      if (text) {
+        element.textContent = text;
+      }
+    });
+    
+    // 更新placeholder属性
+    const inputs = document.querySelectorAll('[data-placeholder-zh][data-placeholder-en]');
+    inputs.forEach(input => {
+      const placeholder = input.getAttribute(`data-placeholder-${currentLanguage}`);
+      if (placeholder) {
+        input.placeholder = placeholder;
+      }
+    });
+    
+    // 更新语言图标
+    if (languageIcon) {
+      languageIcon.textContent = currentLanguage === 'zh' ? '🌐' : '🇨🇳';
+    }
+    
+    // 更新HTML lang属性
+    document.documentElement.lang = currentLanguage === 'zh' ? 'zh-cn' : 'en';
+    
+    // 更新水印输入框的默认值
+    const watermarkInput = document.getElementById('watermarkText');
+    if (watermarkInput) {
+      watermarkInput.value = currentLanguage === 'zh' ? '水印' : 'Watermark';
+    }
+  }
+  
+  // 获取双语Toast消息
+  function getToastMessage(zhMessage, enMessage) {
+    return currentLanguage === 'zh' ? zhMessage : enMessage;
+  }
    
    // 初始化设置
    window.addEventListener('DOMContentLoaded', () => {
@@ -49,7 +123,7 @@
           imgInput: imgInput,
           canvas: canvas
         });
-        showToast('初始化失败，请刷新页面重试', 3000);
+        showToast(getToastMessage('初始化失败，请刷新页面重试', 'Initialization failed, please refresh and try again'), 3000);
         return;
       }
       
@@ -75,7 +149,11 @@
       
      loadSettings();
      initSettingsAutoSave();
-      showToast('欢迎使用专业水印工具 🎨', 2000);
+     
+     // 初始化语言切换
+     initLanguageToggle();
+     
+      showToast(getToastMessage('欢迎使用专业水印工具 🎨', 'Welcome to Professional Watermark Tool 🎨'), 2000);
       
       // 初始化历史记录
       initHistoryPanel();
@@ -97,7 +175,7 @@
       console.log('=== 状态检查完成 ===');
       
       // 显示初始化成功提示
-      showToast('页面初始化完成，可以开始上传图片', 3000);
+      showToast(getToastMessage('页面初始化完成，可以开始上传图片', 'Page initialization complete, you can start uploading images'), 3000);
     }, 100);
   });
   
@@ -461,7 +539,7 @@
           reader.readAsDataURL(file);
         });
         
-        showToast(`已添加 ${files.length} 张图片 ✅`);
+        showToast(getToastMessage('已添加 ${files.length} 张图片 ✅', `Added ${files.length} images ✅`));
       } else {
         showToast('请拖拽图片文件');
       }
@@ -487,7 +565,7 @@
           reader.readAsDataURL(file);
         });
         
-        showToast(`已选择 ${files.length} 张图片 ✅`);
+        showToast(getToastMessage('已选择 ${files.length} 张图片 ✅', `Selected ${files.length} images ✅`));
       } else {
         showToast('请选择图片文件');
       }
@@ -842,7 +920,7 @@
       info.style.color = '#64748b';
     }
     
-    showToast('LOGO已删除');
+    showToast(getToastMessage('LOGO已删除', 'LOGO deleted'));
   }
   
   // 更新LOGO按钮状态
@@ -1165,7 +1243,7 @@
     if (downloadBtn) {
       downloadBtn.addEventListener('click', async () => {
         if (!imagesList.length) {
-          showToast('请先上传至少一张图片');
+        showToast(getToastMessage('请先上传至少一张图片', 'Please upload at least one image first'));
           return;
         }
         
@@ -1174,7 +1252,7 @@
      const manifest = [];
      const startTime = Date.now();
    
-     showToast('开始批量处理...');
+     showToast(getToastMessage('开始批量处理...', 'Starting batch processing...'));
      resetProgress();
    
      let index = 0;
@@ -1212,7 +1290,7 @@
          const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}`;
          saveAs(blob, `watermarked-${timestamp}.zip`);
          playDing();
-         showToast('✅ 全部处理完成');
+         showToast(getToastMessage('✅ 全部处理完成', '✅ All processing completed'));
          resetProgress();
        });
      }
