@@ -4,22 +4,42 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml"
   xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 
-  <!-- 首页 -->
+  <!-- 首页 - 中文版 -->
   <url>
     <loc>https://aishuiyin.vercel.app/</loc>
-    <lastmod>2025-10-26</lastmod>
+    <lastmod>2025-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="zh-cn" href="https://aishuiyin.vercel.app/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://aishuiyin.vercel.app/?lang=en" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://aishuiyin.vercel.app/" />
     <image:image>
       <image:loc>https://aishuiyin.vercel.app/og-image.png</image:loc>
-      <image:caption>AI 水印工具 - 在线图片加水印</image:caption>
+      <image:caption>AI 水印工具 - 在线图片加水印，支持文字水印、图片水印、透明度调整</image:caption>
+      <image:title>AI 水印工具 - 智能图片加水印</image:title>
+    </image:image>
+  </url>
+
+  <!-- 首页 - 英文版 -->
+  <url>
+    <loc>https://aishuiyin.vercel.app/?lang=en</loc>
+    <lastmod>2025-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="zh-cn" href="https://aishuiyin.vercel.app/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://aishuiyin.vercel.app/?lang=en" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://aishuiyin.vercel.app/" />
+    <image:image>
+      <image:loc>https://aishuiyin.vercel.app/og-image.png</image:loc>
+      <image:caption>AI Watermark Tool - Add watermarks to images online, support text/image watermarks, opacity adjustment</image:caption>
+      <image:title>AI Watermark Tool - Smart Image Watermarking</image:title>
     </image:image>
   </url>
 
   <!-- 示例页 -->
   <url>
     <loc>https://aishuiyin.vercel.app/test.html</loc>
-    <lastmod>2025-10-26</lastmod>
+    <lastmod>2025-10-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
