@@ -959,9 +959,9 @@
       const detectionSize = Math.max(fontSize * 2, 100); // 至少100px
       
       if (mode === 'tile') {
-        // 平铺模式：检测是否在任何水印的范围内
-        for (let tileY = 0; tileY < canvas.height; tileY += tileGap) {
-          for (let tileX = 0; tileX < canvas.width; tileX += tileGap) {
+        // 平铺模式：检测是否在任何水印的范围内（使用偏移量）
+        for (let tileY = tileOffset.y; tileY < canvas.height; tileY += tileGap) {
+          for (let tileX = tileOffset.x; tileX < canvas.width; tileX += tileGap) {
             if (x > tileX - detectionSize/2 && x < tileX + detectionSize/2 &&
                 y > tileY - detectionSize/2 && y < tileY + detectionSize/2) {
               return true;
@@ -981,9 +981,9 @@
       const logoHeight = watermarkImage.height / watermarkImage.width * logoWidth;
       
       if (mode === 'tile') {
-        // 平铺模式：检测是否在任何LOGO的范围内
-        for (let tileY = 0; tileY < canvas.height; tileY += tileGap) {
-          for (let tileX = 0; tileX < canvas.width; tileX += tileGap) {
+        // 平铺模式：检测是否在任何LOGO的范围内（使用偏移量）
+        for (let tileY = tileOffset.y; tileY < canvas.height; tileY += tileGap) {
+          for (let tileX = tileOffset.x; tileX < canvas.width; tileX += tileGap) {
             const logoLeft = tileX - logoWidth/2;
             const logoTop = tileY - logoHeight/2;
             const logoRight = tileX + logoWidth/2;
