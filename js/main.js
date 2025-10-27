@@ -919,23 +919,31 @@
     const text = watermarkTextEl.value.trim();
     const fontSize = parseInt(fontSizeEl.value, 10);
     
-    // 计算检测区域大小
-    let detectionSize = 200; // 默认检测区域
-    
     if (text) {
       // 文字水印：使用字体大小作为检测区域
-      detectionSize = Math.max(fontSize * 2, 100); // 至少100px
+      const detectionSize = Math.max(fontSize * 2, 100); // 至少100px
+      return x > watermarkPos.x - detectionSize/2 && x < watermarkPos.x + detectionSize/2 &&
+             y > watermarkPos.y - detectionSize/2 && y < watermarkPos.y + detectionSize/2;
     } else if (watermarkImage) {
-      // 图片水印：根据字体大小计算实际LOGO大小
+      // 图片水印：根据字体大小计算实际LOGO大小和位置
       const logoSizePercent = (fontSize / 72) * 30;
       const logoWidth = canvas.width * (logoSizePercent / 100);
       const logoHeight = watermarkImage.height / watermarkImage.width * logoWidth;
-      detectionSize = Math.max(logoWidth, logoHeight, 100); // 至少100px
+      
+      // LOGO实际绘制位置：左上角在 (watermarkPos.x, watermarkPos.y - logoHeight)
+      const logoLeft = watermarkPos.x;
+      const logoTop = watermarkPos.y - logoHeight;
+      const logoRight = logoLeft + logoWidth;
+      const logoBottom = watermarkPos.y;
+      
+      // 检测是否在LOGO区域内
+      return x >= logoLeft && x <= logoRight && y >= logoTop && y <= logoBottom;
     }
     
-    // 检测是否在检测区域内
-    return x > watermarkPos.x - detectionSize/2 && x < watermarkPos.x + detectionSize/2 &&
-           y > watermarkPos.y - detectionSize/2 && y < watermarkPos.y + detectionSize/2;
+    // 默认检测区域
+    const size = 200;
+    return x > watermarkPos.x - size/2 && x < watermarkPos.x + size/2 &&
+           y > watermarkPos.y - size/2 && y < watermarkPos.y + size/2;
   }
    
    // ========== 绘制水印 ==========
