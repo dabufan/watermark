@@ -1362,9 +1362,62 @@ body.dark .progress-text {
   margin-top: 40px;
 }
 
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-text {
+  margin: 0;
+  font-size: 14px;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.links-label {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.footer-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.footer-link:hover {
+  background-color: #3b82f6;
+  color: white;
+  text-decoration: none;
+}
+
 body.dark .footer {
   color: #94a3b8;
   border-top-color: #334155;
+}
+
+body.dark .links-label {
+  color: #94a3b8;
+}
+
+body.dark .footer-link {
+  color: #60a5fa;
+}
+
+body.dark .footer-link:hover {
+  background-color: #60a5fa;
+  color: #1e293b;
 }
 
 /* 响应式设计 */
@@ -2296,5 +2349,32 @@ body.dark .upload-prompt .upload-hint {
   
   .upload-prompt .upload-hint {
     font-size: 13px;
+  }
+  
+  /* 移动端页脚优化 */
+  .footer {
+    padding: 16px 12px;
+    margin-top: 20px;
+  }
+  
+  .footer-content {
+    gap: 8px;
+  }
+  
+  .footer-text {
+    font-size: 12px;
+  }
+  
+  .footer-links {
+    gap: 6px;
+  }
+  
+  .links-label {
+    font-size: 11px;
+  }
+  
+  .footer-link {
+    font-size: 11px;
+    padding: 3px 6px;
   }
 }
