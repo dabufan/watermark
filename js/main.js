@@ -79,7 +79,7 @@
     
     // 更新语言图标
     if (languageIcon) {
-      languageIcon.textContent = currentLanguage === 'zh' ? '🌐' : '🇨🇳';
+      languageIcon.textContent = currentLanguage === 'zh' ? 'EN' : '中';
     }
     
     // 更新HTML lang属性

@@ -135,8 +135,10 @@ body.dark .logo-sub {
 }
 
 #languageIcon {
-  font-size: 16px;
+  font-size: 12px;
+  font-weight: 600;
   transition: transform 0.2s ease;
+  font-family: Arial, sans-serif;
 }
 
 .language-toggle:hover #languageIcon {
