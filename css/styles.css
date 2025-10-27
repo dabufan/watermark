@@ -325,9 +325,48 @@ body.dark .input-separator {
   transform: translateY(-1px);
 }
 
+/* 删除LOGO按钮样式 */
+.btn-delete-logo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+
+.btn-delete-logo:hover {
+  background: rgba(239, 68, 68, 0.1);
+  transform: translateY(-1px);
+}
+
+/* 深色模式下的删除按钮 */
+body.dark .btn-delete-logo {
+  color: #f87171;
+  border-color: #f87171;
+}
+
+body.dark .btn-delete-logo:hover {
+  background: rgba(248, 113, 113, 0.1);
+}
+
 /* 移动端按钮优化 */
 @media (max-width: 480px) {
   .btn-upload-logo {
+    padding: 12px 20px; /* 增大触摸区域 */
+    font-size: 16px; /* 防止iOS缩放 */
+    border-radius: 8px;
+  }
+  
+  .btn-delete-logo {
     padding: 12px 20px; /* 增大触摸区域 */
     font-size: 16px; /* 防止iOS缩放 */
     border-radius: 8px;

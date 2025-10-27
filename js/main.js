@@ -236,15 +236,25 @@
   function initNewButtonEvents() {
     console.log('初始化新按钮事件...');
     
-    // 上传LOGO按钮
+    // 上传/删除LOGO按钮
     const uploadLogoBtn = document.getElementById('uploadLogoBtn');
     const watermarkImg = document.getElementById('watermarkImg');
     
     if (uploadLogoBtn && watermarkImg) {
       uploadLogoBtn.onclick = () => {
-        console.log('点击上传LOGO按钮');
-        watermarkImg.click();
+        if (watermarkImage) {
+          // 如果有LOGO，则删除
+          console.log('删除LOGO');
+          deleteWatermarkImage();
+        } else {
+          // 如果没有LOGO，则上传
+          console.log('点击上传LOGO按钮');
+          watermarkImg.click();
+        }
       };
+      
+      // 更新按钮状态
+      updateLogoButtonState();
     } else {
       console.log('上传LOGO按钮或文件输入未找到', { uploadLogoBtn, watermarkImg });
     }
@@ -810,6 +820,51 @@
      });
    }
    
+  // 删除水印图片
+  function deleteWatermarkImage() {
+    watermarkImage = null;
+    
+    // 清空文件输入
+    if (watermarkImgInput) {
+      watermarkImgInput.value = '';
+    }
+    
+    // 更新按钮状态
+    updateLogoButtonState();
+    
+    // 重新绘制（只显示文字水印）
+    drawWatermark();
+    
+    // 更新文件信息显示
+    const info = document.getElementById('watermarkImgInfo');
+    if (info) {
+      info.textContent = '未选择任何文件';
+      info.style.color = '#64748b';
+    }
+    
+    showToast('LOGO已删除');
+  }
+  
+  // 更新LOGO按钮状态
+  function updateLogoButtonState() {
+    const uploadLogoBtn = document.getElementById('uploadLogoBtn');
+    const btnText = uploadLogoBtn ? uploadLogoBtn.querySelector('.btn-text') : null;
+    
+    if (uploadLogoBtn && btnText) {
+      if (watermarkImage) {
+        // 有LOGO时显示删除按钮
+        btnText.textContent = '删除LOGO';
+        uploadLogoBtn.classList.add('btn-delete-logo');
+        uploadLogoBtn.classList.remove('btn-upload-logo');
+      } else {
+        // 无LOGO时显示上传按钮
+        btnText.textContent = '上传LOGO';
+        uploadLogoBtn.classList.add('btn-upload-logo');
+        uploadLogoBtn.classList.remove('btn-delete-logo');
+      }
+    }
+  }
+
   // 初始化水印功能
   function initWatermarkEvents() {
     // 水印图片加载
@@ -820,7 +875,10 @@
        const reader = new FileReader();
        reader.onload = ev => {
          watermarkImage = new Image();
-         watermarkImage.onload = drawWatermark;
+         watermarkImage.onload = () => {
+           drawWatermark();
+           updateLogoButtonState(); // 更新按钮状态
+         };
          watermarkImage.src = ev.target.result;
        };
        reader.readAsDataURL(file);
