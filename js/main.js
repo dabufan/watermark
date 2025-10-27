@@ -1013,6 +1013,8 @@
          if (text) {
            ctx.font = `${fontSize}px sans-serif`;
            ctx.fillStyle = fontColor;
+           ctx.textAlign = 'center';
+           ctx.textBaseline = 'middle';
            ctx.fillText(text, x, y);
          }
         if (watermarkImage) {
