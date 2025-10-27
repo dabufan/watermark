@@ -1422,19 +1422,19 @@ body.dark .footer {
   }
 }
 
-/* 手机端优化 */
+/* 手机端优化 - 重新设计紧凑布局 */
 @media (max-width: 480px) {
   .container {
-    padding: 0 12px;
+    padding: 0 8px;
   }
   
   .header-content {
-    padding: 0 12px;
-    gap: 8px;
+    padding: 0 8px;
+    gap: 6px;
   }
   
   .logo {
-    gap: 8px;
+    gap: 6px;
   }
   
   .logo-main {
@@ -1453,162 +1453,192 @@ body.dark .footer {
   }
   
   .main-layout {
-    padding: 12px 0;
+    padding: 8px 0;
   }
   
   .preview-section {
-    height: 60vh;
-    margin: 8px;
-    padding: 8px;
+    height: 65vh;
+    margin: 4px;
+    padding: 4px;
   }
   
+  /* 重新设计移动端控制面板 - 紧凑布局 */
   .control-panel {
-    padding: 12px;
-    margin: 8px;
+    padding: 8px;
+    margin: 4px;
+    border-radius: 6px;
   }
   
-  .watermark-control-row {
-    flex-direction: column;
+  .watermark-controls {
     gap: 8px;
-    align-items: stretch;
+  }
+  
+  /* 水印输入区域 - 紧凑布局 */
+  .watermark-control-row {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 6px;
+    align-items: center;
   }
   
   .watermark-input {
     width: 100%;
     min-width: auto;
+    padding: 8px 10px;
+    font-size: 14px;
   }
   
+  .input-separator {
+    font-size: 12px;
+    padding: 0 4px;
+  }
+  
+  .btn-upload-logo {
+    padding: 8px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  
+  /* 属性控件 - 紧凑网格布局 */
   .watermark-properties {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    align-items: start;
   }
   
   .property-group {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     min-width: auto;
   }
   
   .property-label {
-    font-size: 14px;
-    min-width: 60px;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: auto;
+    text-align: left;
   }
   
   .slider-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: auto;
+  }
+  
+  .property-slider {
     flex: 1;
-    min-width: 100px;
+    height: 4px;
+  }
+  
+  .slider-value {
+    font-size: 11px;
+    min-width: 30px;
+    text-align: right;
   }
   
   .rotation-wrapper {
-    min-width: 80px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-width: auto;
   }
   
+  .rotation-input {
+    width: 40px;
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+  
+  .rotation-unit {
+    font-size: 11px;
+  }
+  
+  /* 开关控件优化 */
+  .toggle-wrapper {
+    align-self: flex-start;
+  }
+  
+  .toggle-label {
+    width: 28px;
+    height: 14px;
+  }
+  
+  .toggle-label::after {
+    width: 10px;
+    height: 10px;
+    top: 2px;
+    left: 2px;
+  }
+  
+  .toggle-switch:checked + .toggle-label::after {
+    transform: translateX(14px);
+  }
+  
+  /* 移动端高级设置折叠功能 */
+  .mobile-advanced-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 6px;
+    font-size: 12px;
+    color: #3b82f6;
+    cursor: pointer;
+    margin: 4px 0;
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-advanced-toggle:hover {
+    background: rgba(59, 130, 246, 0.2);
+  }
+  
+  .mobile-advanced-toggle .toggle-icon {
+    font-size: 10px;
+    transition: transform 0.2s ease;
+  }
+  
+  .mobile-advanced-toggle.expanded .toggle-icon {
+    transform: rotate(180deg);
+  }
+  
+  /* 移动端高级设置区域 */
+  .mobile-advanced-settings {
+    display: none;
+    gap: 6px;
+    margin-top: 4px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  .mobile-advanced-settings.show {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  /* 操作按钮 - 紧凑布局 */
   .action-buttons {
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 6px;
   }
   
   .btn-download,
   .btn-copy {
-    width: 100%;
-    padding: 14px 16px;
-    font-size: 16px;
-  }
-  
-  .upload-area {
-    padding: 30px 16px;
-    margin: 8px;
-  }
-  
-  .upload-text {
-    font-size: 20px;
-  }
-  
-  .upload-hint {
+    padding: 10px 12px;
     font-size: 14px;
+    border-radius: 6px;
   }
   
-  .upload-features {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .upload-feature {
-    font-size: 13px;
-    padding: 8px 16px;
-  }
-  
-  /* 移动端历史记录面板优化 */
-  .history-panel {
-    bottom: 10px;
-    right: 10px;
-    max-width: calc(100vw - 20px);
-    padding: 6px 8px;
-  }
-  
-  .history-thumbnails {
-    max-width: calc(100vw - 40px);
-    gap: 4px;
-  }
-  
-  .history-thumbnail {
-    width: 28px;
-    height: 28px;
-  }
-  
-  .history-delete-btn {
-    width: 14px;
-    height: 14px;
-    font-size: 9px;
-  }
-}
-
-/* 超小屏幕优化 */
-@media (max-width: 360px) {
-  .container {
-    padding: 0 8px;
-  }
-  
-  .header-content {
-    padding: 0 8px;
-  }
-  
-  .logo-main {
-    font-size: 16px;
-  }
-  
-  .preview-section {
-    height: 55vh;
-    margin: 4px;
-    padding: 4px;
-  }
-  
-  .control-panel {
-    padding: 8px;
-    margin: 4px;
-  }
-  
-  .watermark-properties {
-    gap: 12px;
-  }
-  
-  .property-group {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-  
-  .property-label {
-    font-size: 13px;
-    min-width: auto;
-  }
-  
-  .slider-wrapper {
-    width: 100%;
-  }
-  
+  /* 上传区域优化 */
   .upload-area {
     padding: 20px 12px;
     margin: 4px;
@@ -1620,6 +1650,195 @@ body.dark .footer {
   
   .upload-hint {
     font-size: 13px;
+  }
+  
+  .upload-features {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .upload-feature {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  
+  /* 移动端历史记录面板优化 */
+  .history-panel {
+    bottom: 8px;
+    right: 8px;
+    max-width: calc(100vw - 16px);
+    padding: 4px 6px;
+  }
+  
+  .history-thumbnails {
+    max-width: calc(100vw - 32px);
+    gap: 3px;
+  }
+  
+  .history-thumbnail {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .history-delete-btn {
+    width: 12px;
+    height: 12px;
+    font-size: 8px;
+  }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 360px) {
+  .container {
+    padding: 0 6px;
+  }
+  
+  .header-content {
+    padding: 0 6px;
+  }
+  
+  .logo-main {
+    font-size: 16px;
+  }
+  
+  .preview-section {
+    height: 60vh;
+    margin: 2px;
+    padding: 2px;
+  }
+  
+  .control-panel {
+    padding: 6px;
+    margin: 2px;
+  }
+  
+  .watermark-controls {
+    gap: 6px;
+  }
+  
+  /* 超小屏幕水印输入区域 */
+  .watermark-control-row {
+    grid-template-columns: 36px 1fr auto;
+    gap: 4px;
+  }
+  
+  .watermark-input {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  
+  .btn-upload-logo {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  
+  /* 超小屏幕属性控件 - 单列布局 */
+  .watermark-properties {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  
+  .property-group {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .property-label {
+    font-size: 11px;
+    min-width: 50px;
+  }
+  
+  .slider-wrapper {
+    flex: 1;
+    min-width: 80px;
+  }
+  
+  .slider-value {
+    font-size: 10px;
+    min-width: 25px;
+  }
+  
+  .rotation-input {
+    width: 35px;
+    padding: 3px 5px;
+    font-size: 11px;
+  }
+  
+  .rotation-unit {
+    font-size: 10px;
+  }
+  
+  /* 超小屏幕开关 */
+  .toggle-label {
+    width: 24px;
+    height: 12px;
+  }
+  
+  .toggle-label::after {
+    width: 8px;
+    height: 8px;
+    top: 2px;
+    left: 2px;
+  }
+  
+  .toggle-switch:checked + .toggle-label::after {
+    transform: translateX(12px);
+  }
+  
+  /* 超小屏幕操作按钮 */
+  .action-buttons {
+    gap: 4px;
+    margin-top: 4px;
+  }
+  
+  .btn-download,
+  .btn-copy {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  
+  .upload-area {
+    padding: 16px 10px;
+    margin: 2px;
+  }
+  
+  .upload-text {
+    font-size: 16px;
+  }
+  
+  .upload-hint {
+    font-size: 12px;
+  }
+  
+  .upload-feature {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+  
+  /* 超小屏幕历史记录面板 */
+  .history-panel {
+    bottom: 6px;
+    right: 6px;
+    max-width: calc(100vw - 12px);
+    padding: 3px 4px;
+  }
+  
+  .history-thumbnails {
+    max-width: calc(100vw - 24px);
+    gap: 2px;
+  }
+  
+  .history-thumbnail {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .history-delete-btn {
+    width: 10px;
+    height: 10px;
+    font-size: 7px;
   }
 }
 
