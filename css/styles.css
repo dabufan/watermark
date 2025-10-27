@@ -2036,7 +2036,20 @@ body.dark .footer {
 }
 
 .history-thumbnails::-webkit-scrollbar {
-  display: none;
+  height: 4px; /* 细滑动条 */
+}
+
+.history-thumbnails::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.history-thumbnails::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 2px;
+}
+
+.history-thumbnails::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .history-thumbnail-container {
@@ -2138,6 +2151,15 @@ body.dark .history-panel:hover {
   transform: scale(1.2);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
   background: linear-gradient(135deg, rgba(55, 65, 81, 0.98) 0%, rgba(75, 85, 99, 0.98) 100%) !important;
+}
+
+/* 深色模式下的滑动条样式 */
+body.dark .history-thumbnails::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+body.dark .history-thumbnails::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 
