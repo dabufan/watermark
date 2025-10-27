@@ -186,6 +186,9 @@ body.dark .preview-section {
   -moz-border-radius: 8px;
   box-shadow: none;
   border: none;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 body.dark .control-panel {
@@ -255,6 +258,22 @@ body.dark .control-panel {
   outline: none;
   transition: border-color 0.2s ease;
   background: #ffffff;
+  touch-action: manipulation; /* 优化移动端触摸 */
+}
+
+/* 移动端输入框优化 */
+@media (max-width: 480px) {
+  .watermark-input {
+    padding: 12px 16px; /* 增大触摸区域 */
+    font-size: 16px; /* 防止iOS缩放 */
+    border-radius: 8px;
+  }
+  
+  .rotation-input {
+    padding: 8px 10px;
+    font-size: 16px;
+    border-radius: 6px;
+  }
 }
 
 .watermark-input:focus {
@@ -289,20 +308,30 @@ body.dark .input-separator {
   align-items: center;
   gap: 4px;
   padding: 8px 16px;
-  background: #3b82f6;
-  color: white;
-  border: none;
+  background: transparent;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  touch-action: manipulation; /* 优化移动端触摸 */
 }
 
 .btn-upload-logo:hover {
-  background: #2563eb;
+  background: rgba(59, 130, 246, 0.1);
   transform: translateY(-1px);
+}
+
+/* 移动端按钮优化 */
+@media (max-width: 480px) {
+  .btn-upload-logo {
+    padding: 12px 20px; /* 增大触摸区域 */
+    font-size: 16px; /* 防止iOS缩放 */
+    border-radius: 8px;
+  }
 }
 
 body.dark .btn-upload-logo {
@@ -381,6 +410,24 @@ body.dark .property-label {
   padding: 0 !important;
   margin: 0 !important;
   display: block !important;
+  touch-action: manipulation; /* 优化移动端触摸 */
+}
+
+/* 移动端颜色选择器优化 */
+@media (max-width: 480px) {
+  .color-picker-wrapper {
+    width: 40px;
+    height: 40px; /* 增大触摸区域 */
+  }
+  
+  .color-picker {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    max-width: 40px !important;
+    max-height: 40px !important;
+  }
 }
 
 .color-picker::-webkit-color-swatch-wrapper {
@@ -446,10 +493,13 @@ body.dark .property-label {
   outline: none;
   cursor: pointer;
   -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation; /* 优化移动端触摸 */
 }
 
 .property-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
+  appearance: none;
   width: 14px;
   height: 14px;
   border-radius: 50%;
@@ -462,6 +512,29 @@ body.dark .property-label {
 .property-slider::-webkit-slider-thumb:hover {
   background: #2563eb;
   transform: scale(1.1);
+}
+
+/* 移动端滑块优化 */
+@media (max-width: 768px) {
+  .property-slider {
+    height: 4px; /* 增加高度便于触摸 */
+  }
+  
+  .property-slider::-webkit-slider-thumb {
+    width: 18px;
+    height: 18px; /* 增大触摸区域 */
+  }
+}
+
+@media (max-width: 480px) {
+  .property-slider {
+    height: 5px;
+  }
+  
+  .property-slider::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .slider-value {
@@ -737,10 +810,12 @@ body.dark .form-input:focus {
   background: #e2e8f0;
   outline: none;
   -webkit-appearance: none;
+  appearance: none;
 }
 
 .range-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
+  appearance: none;
   appearance: none;
   width: 18px;
   height: 18px;
@@ -1072,6 +1147,20 @@ body.dark .preview-area {
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   transition: box-shadow 0.3s ease;
+  cursor: pointer;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated; /* Added for pixelated rendering */
+  image-rendering: auto; /* Added for default rendering */
+  transform: translateZ(0); /* Enable GPU acceleration */
+  backface-visibility: hidden; /* Optimize rendering performance */
+  -webkit-font-smoothing: antialiased; /* Font smoothing for WebKit */
+  -moz-osx-font-smoothing: grayscale; /* Font smoothing for Firefox */
+  touch-action: manipulation; /* Optimize touch interactions */
+  user-select: none; /* Prevent text selection on touch */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 body.dark .canvas-container canvas {
@@ -1278,9 +1367,23 @@ body.dark .footer {
   }
 }
 
+/* 平板端优化 */
 @media (max-width: 768px) {
   .header-content {
     padding: 0 16px;
+  }
+  
+  .logo-main {
+    font-size: 20px;
+  }
+  
+  .logo-sub {
+    font-size: 12px;
+  }
+  
+  .theme-toggle {
+    padding: 6px 10px;
+    font-size: 12px;
   }
   
   .main-layout {
@@ -1294,6 +1397,290 @@ body.dark .footer {
   
   .preview-area {
     padding: 16px;
+  }
+  
+  .control-panel {
+    padding: 16px;
+  }
+  
+  .watermark-properties {
+    gap: 12px;
+  }
+  
+  .property-group {
+    min-width: 120px;
+  }
+  
+  .action-buttons {
+    gap: 12px;
+  }
+  
+  .btn-download,
+  .btn-copy {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+/* 手机端优化 */
+@media (max-width: 480px) {
+  .container {
+    padding: 0 12px;
+  }
+  
+  .header-content {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  
+  .logo {
+    gap: 8px;
+  }
+  
+  .logo-main {
+    font-size: 18px;
+  }
+  
+  .logo-sub {
+    font-size: 11px;
+    display: none; /* 在小屏幕上隐藏副标题 */
+  }
+  
+  .theme-toggle {
+    padding: 6px 8px;
+    font-size: 12px;
+    min-width: 40px;
+  }
+  
+  .main-layout {
+    padding: 12px 0;
+  }
+  
+  .preview-section {
+    height: 60vh;
+    margin: 8px;
+    padding: 8px;
+  }
+  
+  .control-panel {
+    padding: 12px;
+    margin: 8px;
+  }
+  
+  .watermark-control-row {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  
+  .watermark-input {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .watermark-properties {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .property-group {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    min-width: auto;
+  }
+  
+  .property-label {
+    font-size: 14px;
+    min-width: 60px;
+  }
+  
+  .slider-wrapper {
+    flex: 1;
+    min-width: 100px;
+  }
+  
+  .rotation-wrapper {
+    min-width: 80px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .btn-download,
+  .btn-copy {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 16px;
+  }
+  
+  .upload-area {
+    padding: 30px 16px;
+    margin: 8px;
+  }
+  
+  .upload-text {
+    font-size: 20px;
+  }
+  
+  .upload-hint {
+    font-size: 14px;
+  }
+  
+  .upload-features {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .upload-feature {
+    font-size: 13px;
+    padding: 8px 16px;
+  }
+  
+  /* 移动端历史记录面板优化 */
+  .history-panel {
+    bottom: 10px;
+    right: 10px;
+    max-width: calc(100vw - 20px);
+    padding: 6px 8px;
+  }
+  
+  .history-thumbnails {
+    max-width: calc(100vw - 40px);
+    gap: 4px;
+  }
+  
+  .history-thumbnail {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .history-delete-btn {
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+  }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 360px) {
+  .container {
+    padding: 0 8px;
+  }
+  
+  .header-content {
+    padding: 0 8px;
+  }
+  
+  .logo-main {
+    font-size: 16px;
+  }
+  
+  .preview-section {
+    height: 55vh;
+    margin: 4px;
+    padding: 4px;
+  }
+  
+  .control-panel {
+    padding: 8px;
+    margin: 4px;
+  }
+  
+  .watermark-properties {
+    gap: 12px;
+  }
+  
+  .property-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .property-label {
+    font-size: 13px;
+    min-width: auto;
+  }
+  
+  .slider-wrapper {
+    width: 100%;
+  }
+  
+  .upload-area {
+    padding: 20px 12px;
+    margin: 4px;
+  }
+  
+  .upload-text {
+    font-size: 18px;
+  }
+  
+  .upload-hint {
+    font-size: 13px;
+  }
+}
+
+/* 横屏模式优化 */
+@media (max-width: 768px) and (orientation: landscape) {
+  .preview-section {
+    height: 50vh;
+  }
+  
+  .control-panel {
+    padding: 8px;
+  }
+  
+  .watermark-properties {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .property-group {
+    min-width: 100px;
+  }
+}
+
+/* 大屏手机优化 */
+@media (min-width: 481px) and (max-width: 600px) {
+  .preview-section {
+    height: 65vh;
+  }
+  
+  .watermark-properties {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  
+  .action-buttons {
+    flex-direction: row;
+    gap: 12px;
+  }
+  
+  .btn-download,
+  .btn-copy {
+    flex: 1;
+  }
+}
+
+/* 平板横屏优化 */
+@media (min-width: 769px) and (max-width: 1024px) and (orientation: landscape) {
+  .main-layout {
+    flex-direction: row;
+  }
+  
+  .preview-section {
+    flex: 2;
+    height: calc(100vh - 80px);
+  }
+  
+  .control-panel {
+    flex: 1;
+    max-width: 300px;
+    margin-left: 16px;
   }
 }
 
