@@ -1891,17 +1891,17 @@ body.dark .history-thumbnail.active {
 }
 
 
-/* 上传提示 */
+/* 上传提示 - 无图片时的空状态 */
 .upload-prompt {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  padding: 40px;
-  background: rgba(255, 255, 255, 0.9);
+  padding: 60px 40px;
+  background: rgba(255, 255, 255, 0.95);
   border: 2px dashed #d1d5db;
-  border-radius: 12px;
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.3s ease;
   z-index: 10;
@@ -1910,43 +1910,57 @@ body.dark .history-thumbnail.active {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  max-width: 400px;
+  width: 90%;
 }
 
 .upload-prompt:hover {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   border-color: #3b82f6;
   transform: translate(-50%, -50%) scale(1.02);
+  box-shadow: 0 8px 30px rgba(59, 130, 246, 0.2);
 }
 
 .upload-prompt .upload-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.6;
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.7;
+  color: #3b82f6;
 }
 
 .upload-prompt .upload-text {
-  font-size: 18px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 8px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 12px;
+  letter-spacing: -0.025em;
 }
 
 .upload-prompt .upload-hint {
-  font-size: 14px;
+  font-size: 16px;
   color: #6b7280;
-  line-height: 1.5;
+  line-height: 1.6;
+  margin-bottom: 0;
 }
 
 /* 暗色主题 */
 body.dark .upload-prompt {
-  background: rgba(31, 41, 55, 0.9);
+  background: rgba(31, 41, 55, 0.95);
   border-color: #4b5563;
   color: #f9fafb;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 body.dark .upload-prompt:hover {
-  background: rgba(31, 41, 55, 0.95);
+  background: rgba(31, 41, 55, 0.98);
   border-color: #60a5fa;
+  box-shadow: 0 8px 30px rgba(96, 165, 250, 0.3);
+}
+
+body.dark .upload-prompt .upload-icon {
+  color: #60a5fa;
 }
 
 body.dark .upload-prompt .upload-text {
@@ -1955,4 +1969,47 @@ body.dark .upload-prompt .upload-text {
 
 body.dark .upload-prompt .upload-hint {
   color: #9ca3af;
+}
+
+/* 移动端上传提示优化 */
+@media (max-width: 768px) {
+  .upload-prompt {
+    padding: 40px 24px;
+    max-width: 320px;
+  }
+  
+  .upload-prompt .upload-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+  
+  .upload-prompt .upload-text {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .upload-prompt .upload-hint {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .upload-prompt {
+    padding: 30px 20px;
+    max-width: 280px;
+  }
+  
+  .upload-prompt .upload-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+  }
+  
+  .upload-prompt .upload-text {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  
+  .upload-prompt .upload-hint {
+    font-size: 13px;
+  }
 }
