@@ -1088,7 +1088,8 @@
           const logoSizePercent = (fontSize / 72) * 30; // 将12-72px映射到5-30%
           const w = canvas.width * (logoSizePercent / 100);
           const h = watermarkImage.height / watermarkImage.width * w;
-          ctx.drawImage(watermarkImage, x, y - h, w, h);
+          // 居中对齐绘制，与检测逻辑保持一致
+          ctx.drawImage(watermarkImage, x - w/2, y - h/2, w, h);
         }
        }
        
