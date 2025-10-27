@@ -987,6 +987,9 @@
           ctx.drawImage(watermarkImage, x, y - h, w, h);
         }
        }
+       
+       // 添加网站水印到右下角
+       drawWebsiteWatermark(ctx, canvas.width, canvas.height);
      } catch (error) {
        console.error('drawWatermark 绘制失败:', error);
        showToast('图片绘制失败，请重试', 3000);
@@ -1186,6 +1189,37 @@
         ctx.drawImage(watermarkImage, scaledWatermarkPos.x - logoSizeScaled/2, scaledWatermarkPos.y - logoSizeScaled/2, logoSizeScaled, logoSizeScaled);
       }
     }
+    
+    ctx.restore();
+    
+    // 添加网站水印到右下角
+    drawWebsiteWatermark(ctx, canvasWidth, canvasHeight, scaleX, scaleY);
+  }
+  
+  // 绘制网站水印
+  function drawWebsiteWatermark(ctx, canvasWidth, canvasHeight, scaleX = 1, scaleY = 1) {
+    const websiteText = 'aishuiyin.vercel.app';
+    const websiteFontSize = Math.max(12, Math.min(canvasWidth, canvasHeight) * 0.02); // 根据图片大小动态调整字体
+    const websiteOpacity = 0.6; // 网站水印透明度
+    
+    ctx.save();
+    ctx.globalAlpha = websiteOpacity;
+    ctx.font = `${websiteFontSize * scaleX}px Arial, sans-serif`;
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    
+    // 计算文字位置（右下角）
+    const padding = 10 * scaleX; // 距离边缘的间距
+    const x = canvasWidth - padding;
+    const y = canvasHeight - padding;
+    
+    // 绘制文字描边（黑色边框）
+    ctx.strokeText(websiteText, x, y);
+    // 绘制文字填充（白色）
+    ctx.fillText(websiteText, x, y);
     
     ctx.restore();
   }
