@@ -1055,145 +1055,6 @@ body.dark .main-content {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-/* 上传区域 - 空状态 */
-.upload-area {
-  padding: 100px 60px;
-  text-align: center;
-  border: 2px dashed #d1d5db;
-  border-radius: 20px;
-  margin: 0;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  transition: all 0.3s ease;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  max-width: 600px;
-  width: 100%;
-}
-
-.upload-area::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, transparent 30%, rgba(59, 130, 246, 0.05) 50%, transparent 70%);
-  transform: translateX(-100%);
-  transition: transform 0.6s ease;
-}
-
-.upload-area:hover {
-  border-color: #3b82f6;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.15);
-}
-
-.upload-area:hover::before {
-  transform: translateX(100%);
-}
-
-.upload-area.dragover {
-  border-color: #3b82f6;
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  transform: scale(1.02);
-  box-shadow: 0 15px 35px rgba(59, 130, 246, 0.25);
-}
-
-body.dark .upload-area {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  border-color: #475569;
-}
-
-body.dark .upload-area:hover,
-body.dark .upload-area.dragover {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-  border-color: #3b82f6;
-}
-
-.upload-icon {
-  font-size: 80px;
-  color: #3b82f6;
-  margin-bottom: 32px;
-  display: block;
-  transition: all 0.3s ease;
-}
-
-.upload-area:hover .upload-icon {
-  color: #2563eb;
-  transform: scale(1.1);
-}
-
-.upload-text {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 16px;
-  letter-spacing: -0.025em;
-}
-
-.upload-hint {
-  font-size: 16px;
-  color: #6b7280;
-  margin-bottom: 32px;
-  line-height: 1.6;
-}
-
-.upload-features {
-  display: flex;
-  justify-content: center;
-  gap: 32px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-}
-
-.upload-feature {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 15px;
-  color: #3b82f6;
-  background: rgba(59, 130, 246, 0.08);
-  padding: 12px 20px;
-  border-radius: 25px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.upload-feature:hover {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.3);
-  transform: translateY(-2px);
-}
-
-body.dark .upload-text {
-  color: #f1f5f9;
-}
-
-body.dark .upload-hint {
-  color: #94a3b8;
-}
-
-body.dark .upload-icon {
-  color: #64748b;
-}
-
-body.dark .upload-area:hover .upload-icon {
-  color: #60a5fa;
-}
-
-body.dark .upload-feature {
-  background: rgba(30, 41, 59, 0.7);
-  color: #94a3b8;
-  border-color: rgba(96, 165, 250, 0.2);
-}
-
 /* 预览区域 - 有图片状态 */
 .preview-area {
   padding: 0;
@@ -1538,10 +1399,6 @@ body.dark .footer-link:hover {
     padding: 16px 0;
   }
   
-  .upload-area {
-    padding: 40px 20px;
-    margin: 16px;
-  }
   
   .preview-area {
     padding: 16px;
@@ -1792,11 +1649,6 @@ body.dark .footer-link:hover {
     border-radius: 6px;
   }
   
-  /* 上传区域优化 */
-  .upload-area {
-    padding: 20px 12px;
-    margin: 4px;
-  }
   
   .upload-text {
     font-size: 18px;
@@ -1953,10 +1805,6 @@ body.dark .footer-link:hover {
     font-size: 13px;
   }
   
-  .upload-area {
-    padding: 16px 10px;
-    margin: 2px;
-  }
   
   .upload-text {
     font-size: 16px;
@@ -2123,10 +1971,6 @@ body.dark .footer-link:hover {
   overflow: visible;
 }
 
-/* 隐藏空的历史记录面板 */
-.history-panel:empty {
-  display: none;
-}
 
 .history-panel:hover {
   transform: scale(1.2);

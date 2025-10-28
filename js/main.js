@@ -561,7 +561,7 @@
           reader.readAsDataURL(file);
         });
         
-        showToast(getToastMessage('已添加 ${files.length} 张图片 ✅', `Added ${files.length} images ✅`));
+        showToast(getToastMessage(`已添加 ${files.length} 张图片 ✅`, `Added ${files.length} images ✅`));
       } else {
         showToast('请拖拽图片文件');
       }
@@ -587,7 +587,7 @@
           reader.readAsDataURL(file);
         });
         
-        showToast(getToastMessage('已选择 ${files.length} 张图片 ✅', `Selected ${files.length} images ✅`));
+        showToast(getToastMessage(`已选择 ${files.length} 张图片 ✅`, `Selected ${files.length} images ✅`));
       } else {
         showToast('请选择图片文件');
       }
@@ -1739,13 +1739,19 @@
   // 更新历史记录显示
   function updateHistoryDisplay() {
     const historyThumbnails = document.getElementById('historyThumbnails');
-    if (!historyThumbnails) return;
+    const historyPanel = document.getElementById('historyPanel');
+    if (!historyThumbnails || !historyPanel) return;
     
     historyThumbnails.innerHTML = '';
     
     if (historyList.length === 0) {
-      return; // 如果没有历史记录，不显示任何内容
+      // 如果没有历史记录，隐藏整个面板
+      historyPanel.style.display = 'none';
+      return;
     }
+    
+    // 有历史记录时显示面板
+    historyPanel.style.display = 'flex';
     
     // 显示所有历史记录
     console.log('更新历史记录显示:', {
