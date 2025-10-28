@@ -1469,7 +1469,7 @@
   
   // 绘制网站水印
   function drawWebsiteWatermark(ctx, canvasWidth, canvasHeight, scaleX = 1, scaleY = 1) {
-    const websiteText = 'aishuiyin.vercel.app';
+    const websiteText = 'aishuiyin.babydu.cn';
     const websiteFontSize = Math.max(12, Math.min(canvasWidth, canvasHeight) * 0.02); // 根据图片大小动态调整字体
     const websiteOpacity = 0.6; // 网站水印透明度
     
