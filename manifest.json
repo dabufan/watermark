@@ -1,0 +1,58 @@
+{
+  "name": "AI 水印工具",
+  "short_name": "水印工具",
+  "description": "免费在线图片加水印工具，支持文字水印、图片水印、透明度调整",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities", "photo"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32 48x48",
+      "type": "image/x-icon",
+      "purpose": "any"
+    },
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "AI 水印工具主界面"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "快速加水印",
+      "short_name": "加水印",
+      "description": "快速为图片添加水印",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/favicon.ico",
+          "sizes": "32x32"
+        }
+      ]
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "web",
+      "url": "https://aishuiyin.babydu.cn/"
+    }
+  ],
+  "prefer_related_applications": false
+}

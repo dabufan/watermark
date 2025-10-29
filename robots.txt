@@ -1,4 +1,24 @@
+# AI 水印工具 - Robots.txt
+# https://aishuiyin.babydu.cn/
+
 User-agent: *
 Allow: /
+Disallow: /assets/
+Disallow: /libs/
+Disallow: /css/
+Disallow: /js/
 
+# 允许搜索引擎访问重要文件
+Allow: /favicon.ico
+Allow: /og-image.png
+Allow: /sitemap.xml
+Allow: /robots.txt
+
+# 爬取延迟（毫秒）
+Crawl-delay: 1
+
+# Sitemap位置
 Sitemap: https://aishuiyin.babydu.cn/sitemap.xml
+
+# 主机信息
+Host: https://aishuiyin.babydu.cn/
