@@ -66,14 +66,10 @@ body.dark .header {
 .logo-icon {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 16px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
 }
 
 .logo-text {
@@ -1442,6 +1438,11 @@ body.dark .footer-link:hover {
     gap: 6px;
   }
   
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
   .logo-main {
     font-size: 18px;
   }
@@ -1701,6 +1702,11 @@ body.dark .footer-link:hover {
   
   .header-content {
     padding: 0 6px;
+  }
+  
+  .logo-icon {
+    width: 24px;
+    height: 24px;
   }
   
   .logo-main {

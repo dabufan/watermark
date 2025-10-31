@@ -13,6 +13,12 @@
   "categories": ["productivity", "utilities", "photo"],
   "icons": [
     {
+      "src": "/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
       "src": "/favicon.ico",
       "sizes": "16x16 32x32 48x48",
       "type": "image/x-icon",
@@ -42,8 +48,8 @@
       "url": "/",
       "icons": [
         {
-          "src": "/favicon.ico",
-          "sizes": "32x32"
+          "src": "/icon.png",
+          "sizes": "1024x1024"
         }
       ]
     }
