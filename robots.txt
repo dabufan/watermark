@@ -14,11 +14,11 @@ Allow: /og-image.png
 Allow: /sitemap.xml
 Allow: /robots.txt
 
-# 爬取延迟（毫秒）
+# 爬取延迟（秒）
 Crawl-delay: 1
 
 # Sitemap位置
 Sitemap: https://aishuiyin.babydu.cn/sitemap.xml
 
 # 主机信息
-Host: https://aishuiyin.babydu.cn/
+Host: aishuiyin.babydu.cn

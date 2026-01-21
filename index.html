@@ -1,27 +1,31 @@
 <!DOCTYPE html>
 <html lang="zh-cn">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title data-zh="AI 水印工具 - 在线为图片添加智能水印 | aishuiyin.babydu.cn" data-en="AI Watermark Tool - Add Smart Watermarks to Images Online | aishuiyin.babydu.cn">AI 水印工具 - 在线为图片添加智能水印 | aishuiyin.babydu.cn</title>
+  <title data-zh="AI 水印工具 - 在线为图片添加智能水印 | aishuiyin.babydu.cn"
+    data-en="AI Watermark Tool - Add Smart Watermarks to Images Online | aishuiyin.babydu.cn">AI 水印工具 - 在线为图片添加智能水印 |
+    aishuiyin.babydu.cn</title>
   <meta name="description" content="AI 水印工具是一款免费在线图片加水印工具，支持文字水印、图片水印、透明度调整、位置自定义，一键生成高质量带水印图片。无需下载，立即使用。">
-  <meta name="keywords" content="AI水印, 在线水印, 图片加水印, watermark tool, 在线图片编辑, 免费图片加水印, 水印生成器, aishuiyin, babydu, 图片保护, 版权保护, 批量水印, 透明水印">
-  
+  <meta name="keywords"
+    content="AI水印, 在线水印, 图片加水印, watermark tool, 在线图片编辑, 免费图片加水印, 水印生成器, aishuiyin, babydu, 图片保护, 版权保护, 批量水印, 透明水印">
+
   <!-- ✅ 作者和版权信息 -->
   <meta name="author" content="Xinq lee">
   <meta name="copyright" content="© 2025 Xinq lee">
-  
+
   <!-- ✅ 语言和地区 -->
   <meta name="language" content="zh-CN">
   <meta name="geo.region" content="CN">
-  
+
   <!-- ✅ 移动端优化 -->
   <meta name="format-detection" content="telephone=no">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  
+
   <!-- ✅ 性能优化 -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="referrer" content="no-referrer-when-downgrade">
@@ -87,7 +91,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <script src="libs/jszip.min.js"></script>
   <script src="libs/FileSaver.min.js"></script>
-  
+
   <!-- ✅ 屏幕阅读器隐藏样式 -->
   <style>
     .sr-only {
@@ -103,6 +107,7 @@
     }
   </style>
 </head>
+
 <body>
   <!-- 页头 -->
   <header class="header">
@@ -111,7 +116,8 @@
         <img src="/icon.png" alt="AI 水印工具 Logo" class="logo-icon">
         <div class="logo-text">
           <span class="logo-main" data-zh="加水印" data-en="Watermark">加水印</span>
-          <span class="logo-sub" data-zh="-试试重复拖拽和粘贴图片" data-en="-Try dragging and pasting images repeatedly">-试试重复拖拽和粘贴图片</span>
+          <span class="logo-sub" data-zh="-试试重复拖拽和粘贴图片"
+            data-en="-Try dragging and pasting images repeatedly">-试试重复拖拽和粘贴图片</span>
         </div>
       </div>
       <div class="header-controls">
@@ -135,18 +141,19 @@
           <div class="canvas-container">
             <canvas id="canvas"></canvas>
           </div>
-          
+
           <!-- 无图片时的上传提示 -->
           <label for="imgInput" class="upload-prompt" id="uploadPrompt">
             <div class="upload-icon" role="img" aria-label="上传图标">☁️</div>
             <div class="upload-text" data-zh="上传图片开始加水印" data-en="Upload image to add watermark">上传图片开始加水印</div>
-            <div class="upload-hint" data-zh="支持 Cmd + V 快速粘贴、拖拽上传或点击上传" data-en="Support Cmd + V paste, drag & drop or click to upload">支持 Cmd + V 快速粘贴、拖拽上传或点击上传</div>
+            <div class="upload-hint" data-zh="支持 Cmd + V 快速粘贴、拖拽上传或点击上传"
+              data-en="Support Cmd + V paste, drag & drop or click to upload">支持 Cmd + V 快速粘贴、拖拽上传或点击上传</div>
           </label>
-          
+
           <!-- 隐藏的文件输入框 -->
           <input type="file" id="imgInput" accept="image/*" multiple style="display: none;" />
         </div>
-        
+
         <!-- 历史记录面板 -->
         <div class="history-panel" id="historyPanel">
           <div class="history-thumbnails" id="historyThumbnails">
@@ -165,11 +172,12 @@
               <div class="color-picker-wrapper">
                 <input type="color" id="fontColor" class="color-picker" value="#ff0000">
               </div>
-              
-              <input type="text" id="watermarkText" class="watermark-input" data-placeholder-zh="输入水印文字" data-placeholder-en="Enter watermark text" placeholder="输入水印文字" value="水印">
-              
+
+              <input type="text" id="watermarkText" class="watermark-input" data-placeholder-zh="输入水印文字"
+                data-placeholder-en="Enter watermark text" placeholder="输入水印文字" value="水印">
+
               <span class="input-separator" data-zh="或" data-en="or">或</span>
-              
+
               <button class="btn-upload-logo" id="uploadLogoBtn">
                 <span class="btn-text" data-zh="上传LOGO" data-en="Upload LOGO">上传LOGO</span>
               </button>
@@ -228,36 +236,41 @@
               <span class="btn-text" data-zh="复制图片" data-en="Copy Image">复制图片</span>
             </button>
           </div>
-        </div>
-
-        <!-- 隐藏的文件输入和模式选择 -->
-        <input type="file" id="watermarkImg" class="file-input" accept="image/*" style="display: none;">
-        <select id="mode" style="display: none;">
-          <option value="single">单个水印</option>
-          <option value="tile">平铺水印</option>
-        </select>
-        
-        <!-- 进度条 -->
-        <div class="progress-container" id="progressContainer" style="display: none;">
-          <div class="progress-bar">
-            <div class="progress-fill" id="progressBar"></div>
-          </div>
-          <div class="progress-text" id="progressDetails"></div>
-        </div>
-      </div>
     </div>
+
+    <!-- 隐藏的文件输入和模式选择 -->
+    <input type="file" id="watermarkImg" class="file-input" accept="image/*" style="display: none;">
+    <select id="mode" style="display: none;">
+      <option value="single">单个水印</option>
+      <option value="tile">平铺水印</option>
+    </select>
+
+    <!-- 进度条 -->
+    <div class="progress-container" id="progressContainer" style="display: none;">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressBar"></div>
+      </div>
+      <div class="progress-text" id="progressDetails"></div>
+    </div>
+  </div>
+  </div>
   </div>
 
   <!-- 页脚 -->
   <footer class="footer">
     <div class="footer-content">
-      <p class="footer-text" data-zh="@ 2025 Xinq lee | 本地运行-无数据上传" data-en="@ 2025 Xinq lee | Local Run - No Data Upload">@ 2025 Xinq lee | 本地运行-无数据上传</p>
+      <p class="footer-text" data-zh="@ 2025 Xinq lee | 本地运行-无数据上传"
+        data-en="@ 2025 Xinq lee | Local Run - No Data Upload">@ 2025 Xinq lee | 本地运行-无数据上传</p>
       <div class="footer-links">
         <span class="links-label" data-zh="其他应用：" data-en="Other Apps:">其他应用：</span>
         <a href="https://ecopy.babydu.cn/" target="_blank" class="footer-link">Ecopy</a>
         <a href="https://enote.babydu.cn/" target="_blank" class="footer-link">Enote</a>
         <a href="https://etranslate.babydu.cn/" target="_blank" class="footer-link">Etranslate</a>
         <a href="https://ehabit.babydu.cn/" target="_blank" class="footer-link">Ehabit</a>
+        <a href="https://apps.apple.com/us/developer/%E6%96%B0%E5%BC%BA-%E6%9D%8E/id1842123085" target="_blank"
+          class="footer-appstore">
+          <img src="assets/appstore-badge.png" alt="App Store" class="appstore-badge">
+        </a>
       </div>
     </div>
   </footer>
@@ -268,4 +281,5 @@
   <!-- 脚本 -->
   <script type="module" src="js/main.js"></script>
 </body>
+
 </html>

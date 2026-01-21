@@ -1,0 +1,17 @@
+{
+  "name": "watermark-tool",
+  "version": "1.0.0",
+  "description": "AI 水印工具 - 在线为图片添加智能水印",
+  "main": "js/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "watermark",
+    "ai",
+    "image-processing",
+    "pwa"
+  ],
+  "author": "Xinq lee",
+  "license": "ISC"
+}

@@ -1328,6 +1328,29 @@ body.dark .footer-link:hover {
   color: #1e293b;
 }
 
+.footer-appstore {
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
+  transition: transform 0.2s ease;
+}
+
+.footer-appstore:hover {
+  transform: translateY(-1px);
+}
+
+.appstore-badge {
+  height: 24px;
+  width: auto;
+  display: block;
+}
+
+@media (max-width: 480px) {
+  .appstore-badge {
+    height: 28px;
+  }
+}
+
 /* 响应式设计 */
 @media (max-width: 1024px) {
   .main-layout {
