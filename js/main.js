@@ -9,6 +9,71 @@
    import { showToast, updateProgress, resetProgress, playDing } from './ui.js';
    import { loadSettings, initSettingsAutoSave } from './settings.js';
    
+   // ========== IndexedDB 辅助函数 (用于存储大图，解决 localStorage 限制) ==========
+   const DB_NAME = 'WatermarkToolDB';
+   const STORE_NAME = 'images';
+   const DB_VERSION = 1;
+
+   function getDB() {
+     return new Promise((resolve, reject) => {
+       const request = indexedDB.open(DB_NAME, DB_VERSION);
+       request.onupgradeneeded = (e) => {
+         const db = e.target.result;
+         if (!db.objectStoreNames.contains(STORE_NAME)) {
+           db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+         }
+       };
+       request.onsuccess = (e) => resolve(e.target.result);
+       request.onerror = (e) => reject(e.target.error);
+     });
+   }
+
+   async function saveImageToDB(id, data) {
+     try {
+       const db = await getDB();
+       return new Promise((resolve, reject) => {
+         const tx = db.transaction(STORE_NAME, 'readwrite');
+         const store = tx.objectStore(STORE_NAME);
+         store.put({ id: id, data: data });
+         tx.oncomplete = () => resolve();
+         tx.onerror = (e) => reject(tx.error);
+       });
+     } catch (err) {
+       console.error('IndexedDB save failed:', err);
+     }
+   }
+
+   async function loadImageFromDB(id) {
+     try {
+       const db = await getDB();
+       return new Promise((resolve, reject) => {
+         const tx = db.transaction(STORE_NAME, 'readonly');
+         const store = tx.objectStore(STORE_NAME);
+         const request = store.get(id);
+         request.onsuccess = () => resolve(request.result ? request.result.data : null);
+         request.onerror = () => reject(request.error);
+       });
+     } catch (err) {
+       console.error('IndexedDB load failed:', err);
+       return null;
+     }
+   }
+
+   async function deleteImageFromDB(id) {
+     try {
+       const db = await getDB();
+       return new Promise((resolve, reject) => {
+         const tx = db.transaction(STORE_NAME, 'readwrite');
+         const store = tx.objectStore(STORE_NAME);
+         store.delete(id);
+         tx.oncomplete = () => resolve();
+         tx.onerror = () => reject(tx.error);
+       });
+     } catch (err) {
+       console.error('IndexedDB delete failed:', err);
+     }
+   }
+   
    // ========== 全局变量 ==========
   let dropZone, imgInput, watermarkImgInput, canvas, ctx;
    
@@ -740,61 +805,34 @@
        return;
      }
      
-     const reader = new FileReader();
-     
-     reader.onload = e => {
-       console.log('FileReader 读取完成');
+     // 使用 Object URL 代替 FileReader，节省内存并加快加载
+     const blobUrl = URL.createObjectURL(file);
+     loadImageFromBlobUrl(blobUrl, file);
+  }
+  
+  // 从 Blob URL 加载图片
+  function loadImageFromBlobUrl(blobUrl, originalFile) {
+    const img = new Image();
+      
+    img.onload = () => {
+      console.log('图片加载完成:', img.width, 'x', img.height);
+      baseImage = img;
        
-       // 对于所有图片都进行压缩处理，避免base64过长
-       console.log('开始压缩图片...', {
-         文件名: file.name,
-         文件大小: Math.round(file.size / 1024) + 'KB',
-         文件类型: file.type
-       });
-       
-       // 对于大文件，直接拒绝
-       if (file.size > 20 * 1024 * 1024) { // 20MB
-         console.log('文件过大，拒绝处理');
-         showToast('图片文件过大（>20MB），请使用更小的图片', 5000);
-         return;
-       }
-       
-       // 对于小文件，直接加载，不压缩
-       console.log('文件大小合适，直接加载');
-       loadImageFromDataUrl(e.target.result, file);
-     };
-     
-     reader.onerror = (error) => {
-       console.error('文件读取失败:', error);
-       showToast('文件读取失败，请重试', 3000);
-     };
-     
-     reader.readAsDataURL(file);
-   }
-   
-   // 从dataURL加载图片
-   function loadImageFromDataUrl(dataUrl, originalFile) {
-     const img = new Image();
-       
-     img.onload = () => {
-       console.log('图片加载完成:', img.width, 'x', img.height);
-       baseImage = img;
-        
-       // 计算缩放比例，确保图片完全显示在固定容器中
-       const containerHeight = window.innerHeight * 0.7; // 70vh
-       const containerWidth = window.innerWidth;
-       const maxWidth = Math.min(1200, containerWidth * 0.9);
-       const maxHeight = Math.min(800, containerHeight * 0.9);
-       
-       const scaleX = maxWidth / img.width;
-       const scaleY = maxHeight / img.height;
-       const scale = Math.min(scaleX, scaleY, 1); // 不放大，只缩小
-       
-       const displayWidth = img.width * scale;
-       const displayHeight = img.height * scale;
-       
-       console.log('缩放比例:', scale, '显示尺寸:', displayWidth, 'x', displayHeight);
-       
+      // 计算缩放比例，确保图片完全显示在固定容器中
+      const containerHeight = window.innerHeight * 0.7; // 70vh
+      const containerWidth = window.innerWidth;
+      const maxWidth = Math.min(1200, containerWidth * 0.9);
+      const maxHeight = Math.min(800, containerHeight * 0.9);
+      
+      const scaleX = maxWidth / img.width;
+      const scaleY = maxHeight / img.height;
+      const scale = Math.min(scaleX, scaleY, 1); // 不放大，只缩小
+      
+      const displayWidth = img.width * scale;
+      const displayHeight = img.height * scale;
+      
+      console.log('缩放比例:', scale, '显示尺寸:', displayWidth, 'x', displayHeight);
+      
       // 设置画布为原始图片尺寸（保持高质量）
       canvas.width = img.width;
       canvas.height = img.height;
@@ -811,41 +849,38 @@
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
        
-       // 切换到编辑模式
-       switchToEditMode();
-       
-       // 添加预览区域功能
-       if (originalFile) {
-         addPreviewFeatures(originalFile);
-         
-         // 添加到历史记录
-         addToHistory(originalFile, dataUrl).then(() => {
-           // 设置当前历史记录索引为0（最新添加的）
-           currentHistoryIndex = 0;
-           updateHistoryDisplay();
-         });
-       }
-       
-       drawWatermark();
-     };
-     
-     img.onerror = (error) => {
-       console.error('图片加载失败:', error);
-       console.error('图片信息:', {
-         dataUrlLength: dataUrl.length,
-         originalFileSize: originalFile ? originalFile.size : 'unknown'
-       });
-       
-       // 检查是否是内存不足的问题
-       if (originalFile && originalFile.size > 20 * 1024 * 1024) { // 20MB
-         showToast('图片文件过大，可能导致内存不足。请尝试压缩图片后重试', 5000);
-       } else {
-         showToast('图片加载失败，可能是文件损坏或格式不支持', 3000);
-       }
-     };
-     
-     img.src = dataUrl;
-   }
+      // 切换到编辑模式
+      switchToEditMode();
+      
+      // 添加预览区域功能
+      if (originalFile) {
+        addPreviewFeatures(originalFile);
+        
+        // 添加到历史记录（异步完成，等待 createThumbnail 使用完 blobUrl 后再 revoke）
+        addToHistory(originalFile, blobUrl).then(() => {
+          // 设置当前历史记录索引为0（最新添加的）
+          currentHistoryIndex = 0;
+          updateHistoryDisplay();
+          URL.revokeObjectURL(blobUrl);
+        }).catch(err => {
+          console.error('保存历史记录失败:', err);
+          URL.revokeObjectURL(blobUrl);
+        });
+      } else {
+        URL.revokeObjectURL(blobUrl);
+      }
+      
+      drawWatermark();
+    };
+    
+    img.onerror = (error) => {
+      console.error('图片加载失败:', error);
+      showToast('图片加载失败，可能是文件损坏或格式不支持', 3000);
+      URL.revokeObjectURL(blobUrl);
+    };
+    
+    img.src = blobUrl;
+  }
    
    // 图片压缩功能
    function compressImage(file, quality = 0.9) {
@@ -990,16 +1025,34 @@
     initDragEvents();
   }
    
+  // 重绘节流控制，保证 60fps 帧率
+  let renderRequested = false;
+  function requestRepaint() {
+    if (!renderRequested) {
+      renderRequested = true;
+      requestAnimationFrame(() => {
+        drawWatermark();
+        renderRequested = false;
+      });
+    }
+  }
+
   // 拖拽定位水印
-   let dragging = false;
-   let dragOffset = { x: 0, y: 0 };
+  let dragging = false;
+  let dragOffset = { x: 0, y: 0 };
   
   function initDragEvents() {
     if (!canvas) return;
    
-   canvas.addEventListener('mousedown', startDrag);
-   canvas.addEventListener('mousemove', onDrag);
-   canvas.addEventListener('mouseup', endDrag);
+    // 鼠标事件
+    canvas.addEventListener('mousedown', startDrag);
+    canvas.addEventListener('mousemove', onDrag);
+    canvas.addEventListener('mouseup', endDrag);
+
+    // 触摸事件 (使用 passive: false 允许 preventDefault 阻止页面滚动)
+    canvas.addEventListener('touchstart', startDrag, { passive: false });
+    canvas.addEventListener('touchmove', onDrag, { passive: false });
+    canvas.addEventListener('touchend', endDrag);
   }
   
   // 初始化设置监听
@@ -1014,7 +1067,7 @@
       if (el) {
         el.addEventListener('input', () => {
           if (baseImage) {
-            drawWatermark();
+            requestRepaint();
           }
         });
       }
@@ -1022,10 +1075,14 @@
   }
    
    function startDrag(e) {
-     const pos = getPointer(e);
+     const isTouch = e.type === 'touchstart';
+     const pointerEvent = isTouch ? e.touches[0] : e;
+     const pos = getPointer(pointerEvent);
      const { x, y } = pos;
      if (isInWatermark(x, y)) {
-       e.preventDefault();
+       if (e.cancelable) {
+         e.preventDefault();
+       }
        e.stopPropagation();
        dragging = true;
        
@@ -1046,8 +1103,13 @@
    }
    function onDrag(e) {
      if (!dragging) return;
-     e.preventDefault();
-     const pos = getPointer(e);
+     if (e.cancelable) {
+       e.preventDefault();
+     }
+     
+     const isTouch = e.type === 'touchmove';
+     const pointerEvent = isTouch ? e.touches[0] : e;
+     const pos = getPointer(pointerEvent);
      
      // 获取当前模式
      const modeEl = document.getElementById('mode');
@@ -1076,11 +1138,13 @@
        }
      }
      
-     drawWatermark();
+     requestRepaint();
    }
    function endDrag(e) { 
      if (dragging) {
-       e.preventDefault();
+       if (e.cancelable) {
+         e.preventDefault();
+       }
        e.stopPropagation();
      }
      dragging = false; 
@@ -1662,12 +1726,31 @@
     }
   }
   
-  // 从localStorage加载历史记录
+  // 从localStorage加载历史记录并平滑迁移大图到IndexedDB
   function loadHistoryFromStorage() {
     try {
       const saved = localStorage.getItem('watermark_history');
       if (saved) {
         historyList = JSON.parse(saved);
+        
+        // 平滑迁移：检测旧版本直接保存在 localStorage 中的大图
+        historyList.forEach(async (item) => {
+          if (item.imageDataUrl) {
+            try {
+              // 将 dataURL 转换为 Blob 并存入 IndexedDB
+              const res = await fetch(item.imageDataUrl);
+              const blob = await res.blob();
+              await saveImageToDB(item.id, blob);
+              console.log('成功迁移历史图片到 IndexedDB:', item.id);
+            } catch (err) {
+              console.error('迁移历史图片失败:', item.id, err);
+            }
+            // 清理 localStorage 中的大图数据
+            delete item.imageDataUrl;
+            saveHistoryToStorage();
+          }
+        });
+        
         updateHistoryDisplay();
       }
     } catch (error) {
@@ -1676,30 +1759,37 @@
   }
   
   // 添加图片到历史记录
-  async function addToHistory(file, imageDataUrl) {
+  async function addToHistory(file, imageBlobOrUrl) {
     // 先创建缩略图
-    const thumbnail = await createThumbnail(imageDataUrl);
+    const thumbnail = await createThumbnail(imageBlobOrUrl);
     
+    const id = Date.now();
     const historyItem = {
-      id: Date.now(),
+      id: id,
       name: file.name || '未命名图片',
       size: file.size || 0,
       timestamp: new Date().toISOString(),
-      imageDataUrl: imageDataUrl,
-      thumbnail: thumbnail,
+      thumbnail: thumbnail, // 40x40 缩略图
       watermarkPos: { ...watermarkPos }, // 保存当前水印位置
       displayWidth: canvas.width, // 保存显示宽度
       displayHeight: canvas.height // 保存显示高度
     };
     
-    // 移除重复项（如果有相同的图片）
-    historyList = historyList.filter(item => item.imageDataUrl !== imageDataUrl);
+    // 1. 将原图存入 IndexedDB
+    await saveImageToDB(id, file);
+    
+    // 移除重复项（通过名字和尺寸判断，因为 id 不同）
+    historyList = historyList.filter(item => item.name !== file.name || item.size !== file.size);
     
     // 添加到开头
     historyList.unshift(historyItem);
     
-    // 限制历史记录数量
+    // 限制历史记录数量，多余的同步清理 IndexedDB
     if (historyList.length > maxHistoryItems) {
+      const removedItems = historyList.slice(maxHistoryItems);
+      for (const item of removedItems) {
+        await deleteImageFromDB(item.id);
+      }
       historyList = historyList.slice(0, maxHistoryItems);
     }
     
@@ -1831,69 +1921,89 @@
   }
   
   // 从历史记录加载图片
-  function loadFromHistory(id) {
+  async function loadFromHistory(id) {
     const item = historyList.find(item => item.id === id);
     if (!item) return;
     
-    // 直接从base64数据创建图片
-    const img = new Image();
-    img.onload = () => {
-      console.log('从历史记录加载图片:', img.width, 'x', img.height);
-      baseImage = img;
-      
-      // 计算缩放比例，确保图片完全显示在固定容器中
-      const containerHeight = window.innerHeight * 0.7; // 70vh
-      const containerWidth = window.innerWidth;
-      const maxWidth = Math.min(1200, containerWidth * 0.9);
-      const maxHeight = Math.min(800, containerHeight * 0.9);
-      
-      const scaleX = maxWidth / img.width;
-      const scaleY = maxHeight / img.height;
-      const scale = Math.min(scaleX, scaleY, 1);
-      
-      const displayWidth = img.width * scale;
-      const displayHeight = img.height * scale;
-      
-      // 设置画布为原始尺寸（保持高质量）
-      canvas.width = img.width;
-      canvas.height = img.height;
-      
-      // 通过CSS设置显示尺寸
-      canvas.style.width = displayWidth + 'px';
-      canvas.style.height = displayHeight + 'px';
-      
-      // 恢复保存的水印位置，如果没有则使用默认位置
-      if (item.watermarkPos) {
-        // 直接使用保存的原始位置
-        watermarkPos = { ...item.watermarkPos };
-      } else {
-        // 使用默认位置（相对于原始尺寸）
-        watermarkPos = { x: img.width * 0.75, y: img.height * 0.85 };
+    try {
+      const fileBlob = await loadImageFromDB(id);
+      if (!fileBlob) {
+        showToast(getToastMessage('原图已丢失或未能加载，请重新上传', 'Original image lost or failed to load, please upload again'), 3000);
+        return;
       }
       
-      // 切换到编辑模式
-      switchToEditMode();
+      const blobUrl = URL.createObjectURL(fileBlob);
+      const img = new Image();
       
-      // 绘制水印
-      drawWatermark();
+      img.onload = () => {
+        console.log('从历史记录加载图片完成:', img.width, 'x', img.height);
+        baseImage = img;
+        
+        // 计算缩放比例，确保图片完全显示在固定容器中
+        const containerHeight = window.innerHeight * 0.7; // 70vh
+        const containerWidth = window.innerWidth;
+        const maxWidth = Math.min(1200, containerWidth * 0.9);
+        const maxHeight = Math.min(800, containerHeight * 0.9);
+        
+        const scaleX = maxWidth / img.width;
+        const scaleY = maxHeight / img.height;
+        const scale = Math.min(scaleX, scaleY, 1);
+        
+        const displayWidth = img.width * scale;
+        const displayHeight = img.height * scale;
+        
+        // 设置画布为原始尺寸（保持高质量）
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        // 通过CSS设置显示尺寸
+        canvas.style.width = displayWidth + 'px';
+        canvas.style.height = displayHeight + 'px';
+        
+        // 恢复保存的水印位置，如果没有则使用默认位置
+        if (item.watermarkPos) {
+          watermarkPos = { ...item.watermarkPos };
+        } else {
+          watermarkPos = { x: img.width * 0.75, y: img.height * 0.85 };
+        }
+        
+        // 切换到编辑模式
+        switchToEditMode();
+        
+        // 绘制水印
+        drawWatermark();
+        
+        // 更新当前索引
+        currentHistoryIndex = historyList.findIndex(item => item.id === id);
+        
+        // 更新显示
+        updateHistoryDisplay();
+        
+        URL.revokeObjectURL(blobUrl);
+      };
       
-      // 更新当前索引
-      currentHistoryIndex = historyList.findIndex(item => item.id === id);
+      img.onerror = () => {
+        showToast(getToastMessage('加载历史图片失败', 'Failed to load historical image'), 3000);
+        URL.revokeObjectURL(blobUrl);
+      };
       
-      // 更新显示
-      updateHistoryDisplay();
-      
-      // showToast('已加载历史图片');
-    };
-    img.src = item.imageDataUrl;
+      img.src = blobUrl;
+    } catch (err) {
+      console.error('加载历史记录失败:', err);
+      showToast(getToastMessage('加载历史记录失败', 'Failed to load history item'), 3000);
+    }
   }
   
   // 从历史记录中删除
-  function removeFromHistory(id) {
+  async function removeFromHistory(id) {
     const index = historyList.findIndex(item => item.id === id);
     if (index === -1) return;
     
-    const item = historyList[index];
+    // 从历史记录中删除
+    historyList.splice(index, 1);
+    
+    // 从 IndexedDB 中删除
+    await deleteImageFromDB(id);
     
     // 如果删除的是当前显示的图片，需要重置界面
     if (index === currentHistoryIndex) {
@@ -1916,16 +2026,13 @@
       currentHistoryIndex = currentHistoryIndex - 1;
     }
     
-    // 从历史记录中删除
-    historyList.splice(index, 1);
-    
     // 保存到localStorage
     saveHistoryToStorage();
     
     // 更新显示
     updateHistoryDisplay();
     
-    showToast('已删除历史记录');
+    showToast(getToastMessage('已删除历史记录', 'History record deleted'));
   }
   
   // 格式化时间
@@ -1946,13 +2053,18 @@
   }
   
   // 清空所有历史记录
-  function clearAllHistory() {
-    if (confirm('确定要清空所有历史记录吗？')) {
+  async function clearAllHistory() {
+    const confirmMsg = getToastMessage('确定要清空所有历史记录吗？', 'Are you sure you want to clear all history?');
+    if (confirm(confirmMsg)) {
+      // 清理 IndexedDB
+      for (const item of historyList) {
+        await deleteImageFromDB(item.id);
+      }
       historyList = [];
       currentHistoryIndex = -1;
       saveHistoryToStorage();
       updateHistoryDisplay();
-      showToast('已清空所有历史记录');
+      showToast(getToastMessage('已清空所有历史记录', 'All history cleared'));
     }
   }
   
