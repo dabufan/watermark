@@ -365,12 +365,14 @@
       watermarkImgInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         const info = document.getElementById('watermarkImgInfo');
-        if (file) {
-          info.textContent = `已选择: ${file.name}`;
-          info.style.color = '#10b981';
-        } else {
-          info.textContent = '未选择任何文件';
-          info.style.color = '#64748b';
+        if (info) {
+          if (file) {
+            info.textContent = `已选择: ${file.name}`;
+            info.style.color = '#10b981';
+          } else {
+            info.textContent = '未选择任何文件';
+            info.style.color = '#64748b';
+          }
         }
       });
     }
@@ -1176,6 +1178,39 @@
     const mode = modeEl ? modeEl.value : 'single';
     const tileGap = tileGapEl ? parseInt(tileGapEl.value, 10) : 100;
     
+    if (watermarkImage) {
+      // 图片水印检测
+      const logoSizePercent = (fontSize / 72) * 30;
+      const logoWidth = canvas.width * (logoSizePercent / 100);
+      const logoHeight = watermarkImage.height / watermarkImage.width * logoWidth;
+      
+      if (mode === 'tile') {
+        // 平铺模式：检测是否在任何LOGO的范围内（使用偏移量）
+        for (let tileY = tileOffset.y; tileY < canvas.height; tileY += tileGap) {
+          for (let tileX = tileOffset.x; tileX < canvas.width; tileX += tileGap) {
+            const logoLeft = tileX - logoWidth/2;
+            const logoTop = tileY - logoHeight/2;
+            const logoRight = tileX + logoWidth/2;
+            const logoBottom = tileY + logoHeight/2;
+            
+            if (x >= logoLeft && x <= logoRight && y >= logoTop && y <= logoBottom) {
+              return true;
+            }
+          }
+        }
+      } else {
+        // 单个LOGO模式
+        const logoLeft = watermarkPos.x - logoWidth/2;
+        const logoTop = watermarkPos.y - logoHeight/2;
+        const logoRight = watermarkPos.x + logoWidth/2;
+        const logoBottom = watermarkPos.y + logoHeight/2;
+        
+        if (x >= logoLeft && x <= logoRight && y >= logoTop && y <= logoBottom) {
+          return true;
+        }
+      }
+    }
+
     if (text) {
       // 文字水印检测
       const detectionSize = Math.max(fontSize * 2, 100); // 至少100px
@@ -1196,36 +1231,10 @@
         return x > watermarkPos.x - detectionSize/2 && x < watermarkPos.x + detectionSize/2 &&
                y > watermarkPos.y - detectionSize/2 && y < watermarkPos.y + detectionSize/2;
       }
-    } else if (watermarkImage) {
-      // 图片水印检测
-      const logoSizePercent = (fontSize / 72) * 30;
-      const logoWidth = canvas.width * (logoSizePercent / 100);
-      const logoHeight = watermarkImage.height / watermarkImage.width * logoWidth;
-      
-      if (mode === 'tile') {
-        // 平铺模式：检测是否在任何LOGO的范围内（使用偏移量）
-        for (let tileY = tileOffset.y; tileY < canvas.height; tileY += tileGap) {
-          for (let tileX = tileOffset.x; tileX < canvas.width; tileX += tileGap) {
-            const logoLeft = tileX - logoWidth/2;
-            const logoTop = tileY - logoHeight/2;
-            const logoRight = tileX + logoWidth/2;
-            const logoBottom = tileY + logoHeight/2;
-            
-            if (x >= logoLeft && x <= logoRight && y >= logoTop && y <= logoBottom) {
-              return true;
-            }
-          }
-        }
-        return false;
-      } else {
-        // 单个LOGO模式
-        const logoLeft = watermarkPos.x - logoWidth/2;
-        const logoTop = watermarkPos.y - logoHeight/2;
-        const logoRight = watermarkPos.x + logoWidth/2;
-        const logoBottom = watermarkPos.y + logoHeight/2;
-        
-        return x >= logoLeft && x <= logoRight && y >= logoTop && y <= logoBottom;
-      }
+    }
+    
+    if (watermarkImage) {
+      return false;
     }
     
     // 默认检测区域
@@ -1277,15 +1286,12 @@
        const fontSize = parseInt(fontSizeEl.value, 10);
        const fontColor = fontColorEl.value;
        const opacity = parseFloat(opacityEl.value);
-       const rotate = parseFloat(rotateEl.value);
+       const rotate = parseFloat(rotateEl.value) || 0;
        const mode = modeEl.value;
        const tileGap = parseInt(tileGapEl.value, 10);
    
        ctx.save();
        ctx.globalAlpha = opacity;
-       ctx.translate(canvas.width / 2, canvas.height / 2);
-       ctx.rotate((rotate * Math.PI) / 180);
-       ctx.translate(-canvas.width / 2, -canvas.height / 2);
      
        if (mode === 'tile') {
          for (let y = tileOffset.y; y < canvas.height; y += tileGap)
@@ -1298,21 +1304,27 @@
        ctx.restore();
      
        function drawMark(x, y) {
+         ctx.save();
+         ctx.translate(x, y);
+         if (rotate !== 0) {
+           ctx.rotate((rotate * Math.PI) / 180);
+         }
          if (text) {
            ctx.font = `${fontSize}px sans-serif`;
            ctx.fillStyle = fontColor;
            ctx.textAlign = 'center';
            ctx.textBaseline = 'middle';
-           ctx.fillText(text, x, y);
+           ctx.fillText(text, 0, 0);
          }
-        if (watermarkImage) {
-          // 使用fontSize控制logo大小，将px转换为百分比
-          const logoSizePercent = (fontSize / 72) * 30; // 将12-72px映射到5-30%
-          const w = canvas.width * (logoSizePercent / 100);
-          const h = watermarkImage.height / watermarkImage.width * w;
-          // 居中对齐绘制，与检测逻辑保持一致
-          ctx.drawImage(watermarkImage, x - w/2, y - h/2, w, h);
-        }
+         if (watermarkImage) {
+           // 使用fontSize控制logo大小，将px转换为百分比
+           const logoSizePercent = (fontSize / 72) * 30; // 将12-72px映射到5-30%
+           const w = canvas.width * (logoSizePercent / 100);
+           const h = watermarkImage.height / watermarkImage.width * w;
+           // 居中对齐绘制，与检测逻辑保持一致
+           ctx.drawImage(watermarkImage, -w / 2, -h / 2, w, h);
+         }
+         ctx.restore();
        }
        
        // 添加网站水印到右下角
@@ -1451,12 +1463,12 @@
     }
     
     const text = watermarkTextEl.value.trim();
-    const currentFontSize = parseInt(fontSizeEl.value);
+    const currentFontSize = parseInt(fontSizeEl.value, 10);
     const currentFontColor = fontColorEl.value;
     const currentOpacity = parseFloat(opacityEl.value);
-    const currentRotate = parseInt(rotateEl.value);
+    const currentRotate = parseFloat(rotateEl.value) || 0;
     const currentMode = modeEl.value;
-    const currentTileGap = parseInt(tileGapEl.value);
+    const currentTileGap = parseInt(tileGapEl.value, 10);
     
     if (!text && !watermarkImage) return;
     
@@ -1472,57 +1484,43 @@
     
     ctx.save();
     ctx.globalAlpha = scaledOpacity;
-    
-    if (text) {
-      // 文字水印
-      ctx.font = `${scaledFontSize}px Arial, sans-serif`;
-      ctx.fillStyle = currentFontColor;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
-      // 旋转
+
+    function drawMark(x, y) {
+      ctx.save();
+      ctx.translate(x, y);
       if (scaledRotate !== 0) {
-        ctx.translate(scaledWatermarkPos.x, scaledWatermarkPos.y);
         ctx.rotate((scaledRotate * Math.PI) / 180);
-        ctx.translate(-scaledWatermarkPos.x, -scaledWatermarkPos.y);
       }
-      
-      if (currentMode === 'tile') {
-        // 平铺模式
-        const tileGapScaled = currentTileGap * scaleX;
-        const scaledTileOffset = {
-          x: tileOffset.x * scaleX,
-          y: tileOffset.y * scaleY
-        };
-        for (let y = scaledTileOffset.y; y < canvasHeight; y += tileGapScaled) {
-          for (let x = scaledTileOffset.x; x < canvasWidth; x += tileGapScaled) {
-            ctx.fillText(text, x, y);
-          }
+      if (text) {
+        ctx.font = `${scaledFontSize}px sans-serif`;
+        ctx.fillStyle = currentFontColor;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, 0, 0);
+      }
+      if (watermarkImage) {
+        // 与 drawWatermark 保持完全一致的百分比大小和原始宽高比计算
+        const logoSizePercent = (currentFontSize / 72) * 30;
+        const w = canvasWidth * (logoSizePercent / 100);
+        const h = (watermarkImage.height / watermarkImage.width) * w;
+        ctx.drawImage(watermarkImage, -w / 2, -h / 2, w, h);
+      }
+      ctx.restore();
+    }
+
+    if (currentMode === 'tile') {
+      const tileGapScaled = currentTileGap * scaleX;
+      const scaledTileOffset = {
+        x: tileOffset.x * scaleX,
+        y: tileOffset.y * scaleY
+      };
+      for (let y = scaledTileOffset.y; y < canvasHeight; y += tileGapScaled) {
+        for (let x = scaledTileOffset.x; x < canvasWidth; x += tileGapScaled) {
+          drawMark(x, y);
         }
-      } else {
-        // 单个水印
-        ctx.fillText(text, scaledWatermarkPos.x, scaledWatermarkPos.y);
       }
-    } else if (watermarkImage) {
-      // 图片水印
-      const logoSizeScaled = Math.min(scaledFontSize * 2, canvasWidth * 0.1, canvasHeight * 0.1);
-      
-      if (currentMode === 'tile') {
-        // 平铺模式
-        const tileGapScaled = currentTileGap * scaleX;
-        const scaledTileOffset = {
-          x: tileOffset.x * scaleX,
-          y: tileOffset.y * scaleY
-        };
-        for (let y = scaledTileOffset.y; y < canvasHeight; y += tileGapScaled) {
-          for (let x = scaledTileOffset.x; x < canvasWidth; x += tileGapScaled) {
-            ctx.drawImage(watermarkImage, x - logoSizeScaled/2, y - logoSizeScaled/2, logoSizeScaled, logoSizeScaled);
-          }
-        }
-      } else {
-        // 单个水印
-        ctx.drawImage(watermarkImage, scaledWatermarkPos.x - logoSizeScaled/2, scaledWatermarkPos.y - logoSizeScaled/2, logoSizeScaled, logoSizeScaled);
-      }
+    } else {
+      drawMark(scaledWatermarkPos.x, scaledWatermarkPos.y);
     }
     
     ctx.restore();
@@ -1566,6 +1564,8 @@
     // 设置临时画布为原始图片尺寸
     tempCanvas.width = baseImage.width;
     tempCanvas.height = baseImage.height;
+    tempCtx.imageSmoothingEnabled = true;
+    tempCtx.imageSmoothingQuality = 'high';
     
     // 绘制原始图片
     tempCtx.drawImage(baseImage, 0, 0);
@@ -1600,6 +1600,8 @@
       // 设置临时画布为原始图片尺寸
       tempCanvas.width = baseImage.width;
       tempCanvas.height = baseImage.height;
+      tempCtx.imageSmoothingEnabled = true;
+      tempCtx.imageSmoothingQuality = 'high';
       
       // 绘制原始图片
       tempCtx.drawImage(baseImage, 0, 0);
