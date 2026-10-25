@@ -89,8 +89,6 @@
   </script>
 
   <link rel="stylesheet" href="css/styles.css">
-  <script src="libs/jszip.min.js"></script>
-  <script src="libs/FileSaver.min.js"></script>
 
   <!-- ✅ 屏幕阅读器隐藏样式 -->
   <style>
@@ -221,7 +219,7 @@
               <label class="property-label" data-zh="大小" data-en="Size">大小</label>
               <div class="slider-wrapper">
                 <input type="range" id="fontSize" class="property-slider" min="12" max="150" step="2" value="50">
-                <span class="slider-value" id="sizeValue">50px</span>
+                <span class="slider-value" id="sizeValue">50</span>
               </div>
             </div>
 
@@ -243,24 +241,12 @@
               <span class="btn-text" data-zh="复制图片" data-en="Copy Image">复制图片</span>
             </button>
           </div>
+        </section>
+      </aside>
     </div>
 
-    <!-- 隐藏的文件输入和模式选择 -->
+    <!-- 隐藏的LOGO文件输入 -->
     <input type="file" id="watermarkImg" class="file-input" accept="image/*" style="display: none;">
-    <select id="mode" style="display: none;">
-      <option value="single">单个水印</option>
-      <option value="tile">平铺水印</option>
-    </select>
-
-    <!-- 进度条 -->
-    <div class="progress-container" id="progressContainer" style="display: none;">
-      <div class="progress-bar">
-        <div class="progress-fill" id="progressBar"></div>
-      </div>
-      <div class="progress-text" id="progressDetails"></div>
-    </div>
-  </div>
-  </div>
   </div>
 
   <!-- 页脚 -->
