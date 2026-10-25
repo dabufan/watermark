@@ -402,11 +402,11 @@ async function handleIncomingFiles(fileList) {
   }
   if (!valid.length) return;
 
-  // 先把其余图片加入历史（倒序，保证历史顺序与选择顺序一致），最后加载第一张
+  // 先立即加载并展示第一张图片，其余图片随后按顺序加入历史记录
+  await loadImageFile(valid[0]);
   for (const file of valid.slice(1).reverse()) {
     await addFileToHistoryOnly(file);
   }
-  await loadImageFile(valid[0]);
 
   if (valid.length > 1) {
     showToast(t(`已添加 ${valid.length} 张图片 ✅`, `Added ${valid.length} images ✅`));
@@ -441,7 +441,7 @@ async function loadImageFile(file) {
 async function addFileToHistoryOnly(file) {
   const url = URL.createObjectURL(file);
   try {
-    await addToHistory(file, url, null);
+    await addToHistory(file, url, null, false);
   } catch (err) {
     console.error('添加历史记录失败:', err);
   } finally {
@@ -491,6 +491,7 @@ function onWindowResize() {
 function switchToEditMode() {
   const uploadPrompt = $('uploadPrompt');
   if (uploadPrompt) uploadPrompt.style.display = 'none';
+  if (canvas) canvas.style.display = 'block';
 }
 
 function switchToUploadMode() {
@@ -504,6 +505,7 @@ function switchToUploadMode() {
     canvas.height = 0;
     canvas.style.width = '';
     canvas.style.height = '';
+    canvas.style.display = 'none';
   }
 }
 
@@ -777,8 +779,14 @@ async function copyImageToClipboard() {
     return;
   }
   try {
-    // 直接传入 Promise，兼容 Safari 对用户手势的要求
-    await navigator.clipboard.write([new ClipboardItem({ 'image/png': exportCanvasBlob() })]);
+    try {
+      // 优先直接传入 Promise，兼容 Safari 对用户手势的要求
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': exportCanvasBlob() })]);
+    } catch {
+      // 兼容不支持 Promise 参数的浏览器内核
+      const blob = await exportCanvasBlob();
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    }
     showToast(t('图片已复制到剪切板 ✅', 'Image copied to clipboard ✅'));
   } catch (error) {
     console.error('复制失败:', error);
@@ -833,7 +841,7 @@ function loadHistoryFromStorage() {
   }
 }
 
-async function addToHistory(file, imageUrl, pos) {
+async function addToHistory(file, imageUrl, pos, prepend = true) {
   const thumbnail = await createThumbnail(imageUrl);
   const id = nextHistoryId();
   await saveImageToDB(id, file);
@@ -845,14 +853,20 @@ async function addToHistory(file, imageUrl, pos) {
   }
   historyList = historyList.filter((item) => !duplicates.includes(item));
 
-  historyList.unshift({
+  const newItem = {
     id,
     name: file.name || t('未命名图片', 'Untitled image'),
     size: file.size || 0,
     timestamp: new Date().toISOString(),
     thumbnail,
     watermarkPos: pos ? { ...pos } : null,
-  });
+  };
+
+  if (prepend || historyList.length === 0) {
+    historyList.unshift(newItem);
+  } else {
+    historyList.splice(1, 0, newItem);
+  }
 
   if (historyList.length > MAX_HISTORY_ITEMS) {
     const removed = historyList.slice(MAX_HISTORY_ITEMS);
