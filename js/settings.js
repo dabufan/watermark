@@ -7,6 +7,7 @@
 // 所有需要持久化的控制项 ID
 const settingKeys = [
   'watermarkText',
+  'fontFamily',
   'fontSize',
   'fontColor',
   'opacity',
@@ -45,8 +46,14 @@ function loadSettings() {
       if (!(key in settings)) return;
       const el = document.getElementById(key);
       if (!el) return;
-      if (el.type === 'checkbox') el.checked = !!settings[key];
-      else el.value = settings[key];
+      if (el.type === 'checkbox') {
+        el.checked = !!settings[key];
+      } else {
+        el.value = settings[key];
+        if (el.tagName === 'SELECT' && !el.value) {
+          el.selectedIndex = 0;
+        }
+      }
     });
   } catch (err) {
     console.warn('加载设置失败：', err);
@@ -60,7 +67,8 @@ function initSettingsAutoSave() {
   settingKeys.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', saveSettings);
+    const eventType = (el.type === 'checkbox' || el.tagName === 'SELECT') ? 'change' : 'input';
+    el.addEventListener(eventType, saveSettings);
   });
 }
 

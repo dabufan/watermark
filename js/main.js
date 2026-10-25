@@ -15,6 +15,22 @@ const THUMBNAIL_SIZE = 80;
 const DEFAULT_TEXTS = ['水印', 'Watermark'];
 const WEBSITE_TEXT = 'aishuiyin.babydu.cn';
 
+const FONT_MAP = {
+  sans: { weight: 'normal', family: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif' },
+  'sans-bold': { weight: 'bold', family: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif' },
+  serif: { weight: 'normal', family: '"Songti SC", "STSong", "SimSun", "Times New Roman", serif' },
+  kai: { weight: 'normal', family: '"Kaiti SC", "STKaiti", "KaiTi", Georgia, serif' },
+  rounded: { weight: 'normal', family: '"Yuanti SC", "STYuanti", "YouYuan", sans-serif' },
+  cursive: { weight: 'normal', family: '"Xingkai SC", "STXingkai", "HanziPen SC", "Comic Sans MS", cursive' },
+  monospace: { weight: 'normal', family: '"SF Mono", Menlo, Consolas, "Courier New", monospace' },
+  impact: { weight: '900', family: 'Impact, "Arial Black", "PingFang SC", "Microsoft YaHei", sans-serif' },
+};
+
+function buildCanvasFont(fontKey, fontPx) {
+  const cfg = FONT_MAP[fontKey] || FONT_MAP.sans;
+  return `${cfg.weight} ${fontPx}px ${cfg.family}`;
+}
+
 // ========== IndexedDB 辅助函数 (用于存储大图，解决 localStorage 限制) ==========
 const DB_NAME = 'WatermarkToolDB';
 const STORE_NAME = 'images';
@@ -243,8 +259,10 @@ function migrateLegacyTileMode() {
 // ========== 控件 ==========
 function getSettings() {
   const opacity = parseFloat($('opacity').value);
+  const fontFamilyEl = $('fontFamily');
   return {
     text: $('watermarkText').value.trim(),
+    fontFamily: fontFamilyEl ? fontFamilyEl.value : 'sans',
     fontSize: parseInt($('fontSize').value, 10) || 50,
     fontColor: $('fontColor').value,
     opacity: Number.isFinite(opacity) ? opacity : 0.5,
@@ -264,7 +282,7 @@ function refreshSliderLabels() {
 }
 
 function initControls() {
-  ['watermarkText', 'fontSize', 'fontColor', 'opacity', 'rotate', 'tileGap', 'tileMode'].forEach((id) => {
+  ['watermarkText', 'fontFamily', 'fontSize', 'fontColor', 'opacity', 'rotate', 'tileGap', 'tileMode'].forEach((id) => {
     const el = $(id);
     if (!el) return;
     const onChange = () => {
@@ -272,7 +290,7 @@ function initControls() {
       requestRepaint();
     };
     el.addEventListener('input', onChange);
-    if (el.type === 'checkbox') el.addEventListener('change', onChange);
+    if (el.type === 'checkbox' || el.tagName === 'SELECT') el.addEventListener('change', onChange);
   });
 
   const uploadLogoBtn = $('uploadLogoBtn');
@@ -623,7 +641,7 @@ function isInWatermark(x, y) {
   let boxH = 0;
   if (s.text) {
     ctx.save();
-    ctx.font = `${m.fontPx}px sans-serif`;
+    ctx.font = buildCanvasFont(s.fontFamily, m.fontPx);
     boxW = ctx.measureText(s.text).width;
     ctx.restore();
     boxH = m.fontPx * 1.2;
@@ -676,7 +694,7 @@ function renderWatermarkLayer(c, w, h) {
       c.translate(x, y);
       if (rad) c.rotate(rad);
       if (s.text) {
-        c.font = `${m.fontPx}px sans-serif`;
+        c.font = buildCanvasFont(s.fontFamily, m.fontPx);
         c.fillStyle = s.fontColor;
         c.textAlign = 'center';
         c.textBaseline = 'middle';

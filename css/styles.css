@@ -722,6 +722,36 @@ body.dark .rotation-unit {
   color: #ffffff !important;
 }
 
+/* 字体选择下拉框 */
+.font-select {
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1e293b;
+  background-color: #ffffff;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  touch-action: manipulation;
+}
+
+.font-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+body.dark .font-select {
+  background-color: #334155;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+body.dark .font-select:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
 /* 操作按钮 */
 .action-buttons {
   display: flex;
@@ -1590,6 +1620,12 @@ body.dark .footer-link:hover {
   .rotation-unit {
     font-size: 11px;
   }
+
+  .font-select {
+    width: 100%;
+    padding: 4px 6px;
+    font-size: 12px;
+  }
   
   /* 开关控件优化 */
   .toggle-wrapper {
@@ -1803,6 +1839,13 @@ body.dark .footer-link:hover {
   
   .rotation-unit {
     font-size: 10px;
+  }
+
+  .font-select {
+    width: auto;
+    flex: 1;
+    padding: 3px 6px;
+    font-size: 11px;
   }
   
   /* 超小屏幕开关 */
