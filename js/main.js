@@ -7,9 +7,6 @@
    - 双语支持
    ====================================================== */
 
-import { showToast } from './ui.js';
-import { loadSettings, saveSettings, initSettingsAutoSave } from './settings.js';
-
 // ========== 常量 ==========
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 const MAX_HISTORY_ITEMS = 20;
@@ -25,20 +22,42 @@ const DB_VERSION = 1;
 let dbPromise = null;
 
 function getDB() {
+  if (typeof indexedDB === 'undefined') {
+    return Promise.reject(new Error('IndexedDB unavailable'));
+  }
   if (!dbPromise) {
     dbPromise = new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
-      request.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-        }
-      };
-      request.onsuccess = (e) => resolve(e.target.result);
-      request.onerror = (e) => {
+      const timer = setTimeout(() => {
         dbPromise = null;
-        reject(e.target.error);
-      };
+        reject(new Error('IndexedDB open timeout'));
+      }, 2000);
+      try {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+          }
+        };
+        request.onsuccess = (e) => {
+          clearTimeout(timer);
+          resolve(e.target.result);
+        };
+        request.onerror = (e) => {
+          clearTimeout(timer);
+          dbPromise = null;
+          reject(e.target.error);
+        };
+        request.onblocked = () => {
+          clearTimeout(timer);
+          dbPromise = null;
+          reject(new Error('IndexedDB blocked'));
+        };
+      } catch (err) {
+        clearTimeout(timer);
+        dbPromise = null;
+        reject(err);
+      }
     });
   }
   return dbPromise;
@@ -54,7 +73,7 @@ async function saveImageToDB(id, data) {
       tx.onerror = () => reject(tx.error);
     });
   } catch (err) {
-    console.error('IndexedDB save failed:', err);
+    console.warn('IndexedDB save failed:', err);
   }
 }
 
@@ -67,7 +86,7 @@ async function loadImageFromDB(id) {
       request.onerror = () => reject(request.error);
     });
   } catch (err) {
-    console.error('IndexedDB load failed:', err);
+    console.warn('IndexedDB load failed:', err);
     return null;
   }
 }
@@ -82,7 +101,7 @@ async function deleteImageFromDB(id) {
       tx.onerror = () => reject(tx.error);
     });
   } catch (err) {
-    console.error('IndexedDB delete failed:', err);
+    console.warn('IndexedDB delete failed:', err);
   }
 }
 
@@ -90,6 +109,7 @@ async function deleteImageFromDB(id) {
 let dropZone, imgInput, watermarkImgInput, canvas, ctx;
 
 let baseImage = null;
+let currentBaseObjectUrl = null;
 let watermarkImage = null;
 let currentFileName = '';
 let watermarkPos = { x: 0, y: 0 };
@@ -100,6 +120,11 @@ let currentHistoryId = null;
 let lastHistoryId = 0;
 
 let currentLanguage = 'zh';
+
+let resizeRequested = false;
+let renderRequested = false;
+let dragging = false;
+let dragOffset = { x: 0, y: 0 };
 
 const $ = (id) => document.getElementById(id);
 
@@ -114,15 +139,21 @@ function detectSystemLanguage() {
 }
 
 function initLanguage() {
-  currentLanguage = localStorage.getItem('language') || detectSystemLanguage();
-  localStorage.setItem('language', currentLanguage);
+  try {
+    currentLanguage = localStorage.getItem('language') || detectSystemLanguage();
+    localStorage.setItem('language', currentLanguage);
+  } catch (e) {
+    currentLanguage = detectSystemLanguage();
+  }
   applyLanguage();
 
   const languageToggle = $('languageToggle');
   if (languageToggle) {
     languageToggle.addEventListener('click', () => {
       currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
-      localStorage.setItem('language', currentLanguage);
+      try {
+        localStorage.setItem('language', currentLanguage);
+      } catch (e) {}
       applyLanguage();
     });
   }
@@ -200,7 +231,7 @@ function migrateLegacyTileMode() {
   try {
     const saved = JSON.parse(localStorage.getItem('wm_settings') || '{}');
     const tileMode = $('tileMode');
-    if (tileMode && !('tileMode' in saved) && saved.mode === 'tile') {
+    if (tileMode && saved && typeof saved === 'object' && !('tileMode' in saved) && saved.mode === 'tile') {
       tileMode.checked = true;
       saveSettings();
     }
@@ -257,23 +288,24 @@ function initControls() {
 
   if (watermarkImgInput) {
     watermarkImgInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      watermarkImgInput.value = '';
+      const file = e.target.files && e.target.files[0];
       if (!file) return;
-      if (!file.type.startsWith('image/')) {
+      if (!isImageFile(file)) {
+        watermarkImgInput.value = '';
         showToast(t('请选择图片文件', 'Please choose an image file'));
         return;
       }
-      const url = URL.createObjectURL(file);
       try {
-        watermarkImage = await decodeImage(url);
+        const dataUrl = await readFileAsDataURL(file);
+        watermarkImage = await decodeImage(dataUrl);
         updateLogoButtonState();
-        requestRepaint();
+        drawWatermark();
+        showToast(t('LOGO 已加载 ✅', 'LOGO loaded ✅'));
       } catch (err) {
         console.error('LOGO 加载失败:', err);
         showToast(t('LOGO 加载失败，请换一张图片', 'Failed to load LOGO, please try another image'), 3000);
       } finally {
-        URL.revokeObjectURL(url);
+        watermarkImgInput.value = '';
       }
     });
   }
@@ -291,7 +323,7 @@ function deleteWatermarkImage() {
   watermarkImage = null;
   if (watermarkImgInput) watermarkImgInput.value = '';
   updateLogoButtonState();
-  requestRepaint();
+  drawWatermark();
   showToast(t('LOGO已删除', 'LOGO deleted'));
 }
 
@@ -312,10 +344,25 @@ function updateLogoButtonState() {
 }
 
 // ========== 上传 / 拖拽 / 粘贴 ==========
+function isImageFile(file) {
+  if (!file) return false;
+  if (file.type && file.type.startsWith('image/')) return true;
+  return /\.(png|jpe?g|gif|webp|bmp|svg|ico|avif|heic|heif|tiff?)$/i.test(file.name || '');
+}
+
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = () => reject(reader.error || new Error('FileReader error'));
+    reader.readAsDataURL(file);
+  });
+}
+
 function initUploadEvents() {
   // 点击预览区空白处也可以上传（canvas 和 label 自己处理）
   dropZone.addEventListener('click', (e) => {
-    if (e.target === canvas) return;
+    if (e.target === canvas || canvas.contains(e.target)) return;
     const uploadPrompt = $('uploadPrompt');
     if (uploadPrompt && uploadPrompt.contains(e.target)) return;
     if (e.target === imgInput) return;
@@ -338,13 +385,17 @@ function initUploadEvents() {
     e.preventDefault();
     e.stopPropagation();
     dropZone.classList.remove('dragover');
-    handleIncomingFiles(e.dataTransfer.files);
+    const files = Array.from((e.dataTransfer && e.dataTransfer.files) || []);
+    handleIncomingFiles(files);
   });
 
-  imgInput.addEventListener('change', (e) => {
-    const files = Array.from(e.target.files);
-    imgInput.value = ''; // 允许重复选择同一个文件
-    handleIncomingFiles(files);
+  imgInput.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    try {
+      await handleIncomingFiles(files);
+    } finally {
+      imgInput.value = ''; // 读取完成后再重置，允许重复选择同一个文件
+    }
   });
 }
 
@@ -353,13 +404,21 @@ function initPasteEvents() {
     const clipboardData = e.clipboardData;
     if (!clipboardData) return;
 
-    // files 和 items 往往包含同一张图，只取其中一种来源，避免重复
-    let files = Array.from(clipboardData.files || []).filter((f) => f.type.startsWith('image/'));
-    if (!files.length) {
-      files = Array.from(clipboardData.items || [])
-        .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
-        .map((item) => item.getAsFile())
-        .filter(Boolean);
+    const files = [];
+    if (clipboardData.items && clipboardData.items.length) {
+      for (let i = 0; i < clipboardData.items.length; i++) {
+        const item = clipboardData.items[i];
+        if (item.type && item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) files.push(file);
+        }
+      }
+    }
+    if (!files.length && clipboardData.files && clipboardData.files.length) {
+      for (let i = 0; i < clipboardData.files.length; i++) {
+        const file = clipboardData.files[i];
+        if (isImageFile(file)) files.push(file);
+      }
     }
 
     if (!files.length) {
@@ -386,7 +445,7 @@ function initGlobalDragPrevention() {
 }
 
 async function handleIncomingFiles(fileList) {
-  const images = Array.from(fileList || []).filter((f) => f.type && f.type.startsWith('image/'));
+  const images = Array.from(fileList || []).filter(isImageFile);
   if (!images.length) {
     showToast(t('请选择图片文件', 'Please choose image files'));
     return;
@@ -410,6 +469,8 @@ async function handleIncomingFiles(fileList) {
 
   if (valid.length > 1) {
     showToast(t(`已添加 ${valid.length} 张图片 ✅`, `Added ${valid.length} images ✅`));
+  } else {
+    showToast(t('图片已加载 ✅', 'Image loaded ✅'));
   }
 }
 
@@ -422,35 +483,56 @@ function decodeImage(url) {
   });
 }
 
-async function loadImageFile(file) {
+async function decodeFileToImage(file) {
   const url = URL.createObjectURL(file);
   try {
     const img = await decodeImage(url);
-    setBaseImage(img, { name: file.name });
-    const id = await addToHistory(file, url, watermarkPos);
+    return { img, objectUrl: url };
+  } catch (err) {
+    URL.revokeObjectURL(url);
+    const dataUrl = await readFileAsDataURL(file);
+    const img = await decodeImage(dataUrl);
+    return { img, objectUrl: null };
+  }
+}
+
+async function loadImageFile(file) {
+  try {
+    const { img, objectUrl } = await decodeFileToImage(file);
+    setBaseImage(img, { name: file.name, objectUrl });
+    const id = await addToHistory(file, img, watermarkPos);
     currentHistoryId = id;
     updateHistoryDisplay();
   } catch (err) {
     console.error('图片加载失败:', err);
     showToast(t('图片加载失败，可能是文件损坏或格式不支持', 'Failed to load image, the file may be corrupted or unsupported'), 3000);
-  } finally {
-    URL.revokeObjectURL(url);
   }
 }
 
 async function addFileToHistoryOnly(file) {
-  const url = URL.createObjectURL(file);
   try {
-    await addToHistory(file, url, null, false);
+    const { img, objectUrl } = await decodeFileToImage(file);
+    try {
+      await addToHistory(file, img, null, false);
+    } finally {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    }
   } catch (err) {
     console.error('添加历史记录失败:', err);
-  } finally {
-    URL.revokeObjectURL(url);
   }
 }
 
 // ========== 画布 ==========
-function setBaseImage(img, { name = '', pos = null } = {}) {
+function releaseBaseObjectUrl() {
+  if (currentBaseObjectUrl) {
+    URL.revokeObjectURL(currentBaseObjectUrl);
+    currentBaseObjectUrl = null;
+  }
+}
+
+function setBaseImage(img, { name = '', pos = null, objectUrl = null } = {}) {
+  releaseBaseObjectUrl();
+  currentBaseObjectUrl = objectUrl;
   baseImage = img;
   currentFileName = name;
 
@@ -478,7 +560,6 @@ function fitCanvasDisplay() {
   canvas.style.height = baseImage.height * scale + 'px';
 }
 
-let resizeRequested = false;
 function onWindowResize() {
   if (resizeRequested) return;
   resizeRequested = true;
@@ -497,14 +578,11 @@ function switchToEditMode() {
 function switchToUploadMode() {
   const uploadPrompt = $('uploadPrompt');
   if (uploadPrompt) uploadPrompt.style.display = '';
+  releaseBaseObjectUrl();
   baseImage = null;
   currentFileName = '';
   currentHistoryId = null;
   if (canvas) {
-    canvas.width = 0;
-    canvas.height = 0;
-    canvas.style.width = '';
-    canvas.style.height = '';
     canvas.style.display = 'none';
   }
 }
@@ -637,7 +715,6 @@ function drawWebsiteWatermark(c, w, h) {
 }
 
 // 重绘节流，保证 60fps
-let renderRequested = false;
 function requestRepaint() {
   if (renderRequested || !baseImage) return;
   renderRequested = true;
@@ -648,9 +725,6 @@ function requestRepaint() {
 }
 
 // ========== 拖拽水印 ==========
-let dragging = false;
-let dragOffset = { x: 0, y: 0 };
-
 function initDragEvents() {
   canvas.addEventListener('mousedown', startDrag);
   canvas.addEventListener('mousemove', updateCursor);
@@ -841,8 +915,8 @@ function loadHistoryFromStorage() {
   }
 }
 
-async function addToHistory(file, imageUrl, pos, prepend = true) {
-  const thumbnail = await createThumbnail(imageUrl);
+async function addToHistory(file, img, pos, prepend = true) {
+  const thumbnail = createThumbnailFromImage(img);
   const id = nextHistoryId();
   await saveImageToDB(id, file);
 
@@ -882,24 +956,22 @@ async function addToHistory(file, imageUrl, pos, prepend = true) {
 }
 
 // 居中裁剪成正方形缩略图，避免变形
-function createThumbnail(imageUrl) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const thumb = document.createElement('canvas');
-      thumb.width = THUMBNAIL_SIZE;
-      thumb.height = THUMBNAIL_SIZE;
-      const side = Math.min(img.width, img.height);
-      const sx = (img.width - side) / 2;
-      const sy = (img.height - side) / 2;
-      const thumbCtx = thumb.getContext('2d');
-      thumbCtx.imageSmoothingQuality = 'high';
-      thumbCtx.drawImage(img, sx, sy, side, side, 0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
-      resolve(thumb.toDataURL('image/jpeg', 0.8));
-    };
-    img.onerror = () => resolve(null);
-    img.src = imageUrl;
-  });
+function createThumbnailFromImage(img) {
+  try {
+    const thumb = document.createElement('canvas');
+    thumb.width = THUMBNAIL_SIZE;
+    thumb.height = THUMBNAIL_SIZE;
+    const side = Math.min(img.width, img.height);
+    const sx = (img.width - side) / 2;
+    const sy = (img.height - side) / 2;
+    const thumbCtx = thumb.getContext('2d');
+    thumbCtx.imageSmoothingQuality = 'high';
+    thumbCtx.drawImage(img, sx, sy, side, side, 0, 0, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+    return thumb.toDataURL('image/jpeg', 0.8);
+  } catch (err) {
+    console.warn('生成缩略图失败:', err);
+    return null;
+  }
 }
 
 function updateHistoryDisplay() {
@@ -958,17 +1030,14 @@ async function loadFromHistory(id) {
     return;
   }
 
-  const url = URL.createObjectURL(fileBlob);
   try {
-    const img = await decodeImage(url);
-    setBaseImage(img, { name: item.name, pos: item.watermarkPos });
+    const { img, objectUrl } = await decodeFileToImage(fileBlob);
+    setBaseImage(img, { name: item.name, pos: item.watermarkPos, objectUrl });
     currentHistoryId = id;
     updateHistoryDisplay();
   } catch (err) {
     console.error('加载历史图片失败:', err);
     showToast(t('加载历史图片失败', 'Failed to load historical image'), 3000);
-  } finally {
-    URL.revokeObjectURL(url);
   }
 }
 

@@ -18,24 +18,29 @@ const settingKeys = [
 /**
  * 保存当前设置到 localStorage
  */
-export function saveSettings() {
-  const settings = {};
-  settingKeys.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    settings[id] = el.type === 'checkbox' ? el.checked : el.value;
-  });
-  localStorage.setItem('wm_settings', JSON.stringify(settings));
+function saveSettings() {
+  try {
+    const settings = {};
+    settingKeys.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      settings[id] = el.type === 'checkbox' ? el.checked : el.value;
+    });
+    localStorage.setItem('wm_settings', JSON.stringify(settings));
+  } catch (err) {
+    console.warn('保存设置失败：', err);
+  }
 }
 
 /**
  * 从 localStorage 加载设置并应用到控件
  */
-export function loadSettings() {
+function loadSettings() {
   try {
     const data = localStorage.getItem('wm_settings');
     if (!data) return;
     const settings = JSON.parse(data);
+    if (!settings || typeof settings !== 'object') return;
     settingKeys.forEach(key => {
       if (!(key in settings)) return;
       const el = document.getElementById(key);
@@ -51,10 +56,14 @@ export function loadSettings() {
 /**
  * 初始化：控件变化时自动保存
  */
-export function initSettingsAutoSave() {
+function initSettingsAutoSave() {
   settingKeys.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', saveSettings);
   });
 }
+
+window.saveSettings = saveSettings;
+window.loadSettings = loadSettings;
+window.initSettingsAutoSave = initSettingsAutoSave;
