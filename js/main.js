@@ -16,19 +16,63 @@ const DEFAULT_TEXTS = ['水印', 'Watermark'];
 const WEBSITE_TEXT = 'aishuiyin.babydu.cn';
 
 const FONT_MAP = {
-  sans: { weight: 'normal', family: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif' },
-  'sans-bold': { weight: 'bold', family: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif' },
-  serif: { weight: 'normal', family: '"Songti SC", "STSong", "SimSun", "Times New Roman", serif' },
-  kai: { weight: 'normal', family: '"Kaiti SC", "STKaiti", "KaiTi", Georgia, serif' },
-  rounded: { weight: 'normal', family: '"Yuanti SC", "STYuanti", "YouYuan", sans-serif' },
-  cursive: { weight: 'normal', family: '"Xingkai SC", "STXingkai", "HanziPen SC", "Comic Sans MS", cursive' },
-  monospace: { weight: 'normal', family: '"SF Mono", Menlo, Consolas, "Courier New", monospace' },
-  impact: { weight: '900', family: 'Impact, "Arial Black", "PingFang SC", "Microsoft YaHei", sans-serif' },
+  sans: {
+    style: 'normal',
+    weight: 'normal',
+    family: '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif',
+  },
+  'sans-bold': {
+    style: 'normal',
+    weight: 'bold',
+    family: '"PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif',
+  },
+  serif: {
+    style: 'normal',
+    weight: 'normal',
+    family: '"Songti SC", "STSong", "SimSun", "Noto Serif SC", "Times New Roman", Times, serif',
+  },
+  kai: {
+    style: 'normal',
+    weight: 'normal',
+    family: '"Kaiti SC", "STKaiti", "KaiTi", "Ma Shan Zheng", "Hiragino Mincho ProN", Georgia, serif',
+  },
+  rounded: {
+    style: 'normal',
+    weight: 'normal',
+    family: '"Yuanti SC", "STYuanti", "YouYuan", "ZCOOL KuaiLe", "Hiragino Maru Gothic ProN", "Arial Rounded MT Bold", sans-serif',
+  },
+  cursive: {
+    style: 'italic',
+    weight: 'normal',
+    family: '"Xingkai SC", "STXingkai", "HanziPen SC", "Long Cang", "Apple Chancery", "Comic Sans MS", cursive',
+  },
+  monospace: {
+    style: 'normal',
+    weight: 'normal',
+    family: '"SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace',
+  },
+  impact: {
+    style: 'normal',
+    weight: '900',
+    family: 'Impact, "Arial Black", "STHeiti", "PingFang SC", "Microsoft YaHei", sans-serif',
+  },
 };
 
 function buildCanvasFont(fontKey, fontPx) {
   const cfg = FONT_MAP[fontKey] || FONT_MAP.sans;
-  return `${cfg.weight} ${fontPx}px ${cfg.family}`;
+  const size = Math.round(fontPx * 100) / 100;
+  return `${cfg.style} ${cfg.weight} ${size}px ${cfg.family}`;
+}
+
+function ensureWatermarkFontLoaded() {
+  if (!document.fonts || !document.fonts.load) return;
+  const fontFamilyEl = $('fontFamily');
+  const textEl = $('watermarkText');
+  const fontKey = fontFamilyEl ? fontFamilyEl.value : 'sans';
+  const sample = (textEl && textEl.value.trim()) || '水印Watermark';
+  document.fonts.load(buildCanvasFont(fontKey, 24), sample).then(() => {
+    requestRepaint();
+  }).catch(() => {});
 }
 
 // ========== IndexedDB 辅助函数 (用于存储大图，解决 localStorage 限制) ==========
@@ -221,6 +265,7 @@ function init() {
   migrateLegacyTileMode();
   refreshSliderLabels();
   initSettingsAutoSave();
+  ensureWatermarkFontLoaded();
 
   initLanguage();
   initControls();
@@ -287,6 +332,9 @@ function initControls() {
     if (!el) return;
     const onChange = () => {
       refreshSliderLabels();
+      if (id === 'fontFamily' || id === 'watermarkText') {
+        ensureWatermarkFontLoaded();
+      }
       requestRepaint();
     };
     el.addEventListener('input', onChange);
